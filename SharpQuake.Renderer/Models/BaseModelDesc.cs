@@ -28,7 +28,7 @@ using SharpQuake.Renderer.Textures;
 
 namespace SharpQuake.Renderer.Models
 {
-	public class BaseModelDesc
+	public abstract class BaseModelDesc
 	{
 		public virtual String Name
 		{

@@ -53,7 +53,7 @@ namespace SharpQuake.Renderer.Desktop
             get;
         }
 
-        public virtual Icon Icon
+        public virtual IBaseIcon Icon
         {
             get;
             set;

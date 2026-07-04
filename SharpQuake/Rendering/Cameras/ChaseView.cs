@@ -25,7 +25,6 @@
 using System;
 using SharpQuake.Framework;
 using SharpQuake.Framework.Factories.IO;
-using SharpQuake.Framework.IO;
 using SharpQuake.Framework.Mathematics;
 using SharpQuake.Framework.World;
 using SharpQuake.Networking.Client;

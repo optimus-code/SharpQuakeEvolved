@@ -16,62 +16,75 @@
 /// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ///
 /// See the GNU General Public License for more details.
-///
-/// You should have received a copy of the GNU General Public License
-/// along with this program; if not, write to the Free Software
-/// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 /// </copyright>
 
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.IO;
-using System.Linq;
-using System.Net.Sockets;
 using OpenTK.Graphics.OpenGL;
-using SharpFont;
+using OpenTK.Windowing.Desktop;
 using SharpQuake.Framework;
 using SharpQuake.Framework.IO;
 using SharpQuake.Framework.Mathematics;
 using SharpQuake.Renderer.OpenGL.Models;
 using SharpQuake.Renderer.OpenGL.Textures;
 using SharpQuake.Renderer.Textures;
+using StbImageWriteSharp;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using Boolean = System.Boolean;
+using Buffer = System.Buffer;
+using TKGameWindow = OpenTK.Windowing.Desktop.GameWindow;
+using TKMathHelper = OpenTK.Mathematics.MathHelper;
+using TKMatrix4 = OpenTK.Mathematics.Matrix4;
+using TKVector2i = OpenTK.Mathematics.Vector2i;
+using TKVector3 = OpenTK.Mathematics.Vector3;
+using TKWindowBorder = OpenTK.Windowing.Common.WindowBorder;
+using TKWindowState = OpenTK.Windowing.Common.WindowState;
 
 namespace SharpQuake.Renderer.OpenGL
 {
     public class GLDevice : BaseDevice
     {
-        private OpenTK.DisplayDevice OpenTKDevice
+        private TKGameWindow Form
         {
             get;
             set;
         }
 
-        private OpenTK.GameWindow Form
+        private MonitorInfo Monitor
         {
             get;
             set;
         }
 
-        public OpenTK.Matrix4 Projection;
-        public OpenTK.Matrix4 View;
-        public OpenTK.Matrix4 WorldMatrix; // r_world_matrix
+        public TKMatrix4 Projection;
+        public TKMatrix4 View;
+        public TKMatrix4 WorldMatrix; // r_world_matrix
 
-        public GLDevice( OpenTK.GameWindow form, OpenTK.DisplayDevice openTKDevice )
-            : base( typeof( GLDeviceDesc ), 
-                  typeof( GLGraphics ), 
+        private int _frameBuffer;
+        private IRenderTexture _renderTexture;
+        private int _depthBuffer;
+        private Shader _postProcessShaderProgram;
+        private bool _hasInitialisedRenderBuffers;
+
+        public GLDevice( TKGameWindow form )
+            : this( form, Monitors.GetPrimaryMonitor( ) )
+        {
+        }
+
+        public GLDevice( TKGameWindow form, MonitorInfo monitor )
+            : base( typeof( GLDeviceDesc ),
+                  typeof( GLGraphics ),
                   typeof( GLTextureAtlas ),
                   typeof( GLModel ),
                   typeof( GLModelDesc ),
-				  typeof( GLAliasModel ),
-				  typeof( GLAliasModelDesc ),
-				  typeof( GLTexture ), 
+                  typeof( GLAliasModel ),
+                  typeof( GLAliasModelDesc ),
+                  typeof( GLTexture ),
                   typeof( GLTextureDesc ),
                   typeof( GLModelBuffer ) )
         {
             Form = form;
-            OpenTKDevice = openTKDevice;
+            Monitor = monitor ?? Monitors.GetPrimaryMonitor( );
 
             TextureFilters = new Dictionary<String, BaseTextureFilter>
             {
@@ -129,6 +142,79 @@ namespace SharpQuake.Renderer.OpenGL
             GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureWrapT, ( Int32 ) TextureWrapMode.Repeat );
             GL.BlendFunc( BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha );
             GL.TexEnv( TextureEnvTarget.TextureEnv, TextureEnvParameter.TextureEnvMode, ( Int32 ) TextureEnvMode.Replace );
+
+            _hasInitialisedRenderBuffers = false;
+        }
+
+        private void ConfigureFrameBuffers( )
+        {
+            if ( _hasInitialisedRenderBuffers )
+                return;
+
+            DisposeFrameBuffers( );
+
+            _frameBuffer = GL.GenFramebuffer( );
+            GL.BindFramebuffer( FramebufferTarget.Framebuffer, _frameBuffer );
+
+            GLTexture.CurrentTextureNumber++;
+            _renderTexture = new GLRenderTexture( GL.GenTexture( ), Desc.ActualWidth, Desc.ActualHeight );
+
+            GL.BindTexture( TextureTarget.Texture2D, _renderTexture.ID );
+
+            GL.TexImage2D( TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb, _renderTexture.Width, _renderTexture.Height, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero );
+            GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, ( Int32 ) TextureMinFilter.Linear );
+            GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, ( Int32 ) TextureMagFilter.Linear );
+            GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureWrapS, ( Int32 ) TextureWrapMode.ClampToEdge );
+            GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureWrapT, ( Int32 ) TextureWrapMode.ClampToEdge );
+
+            GL.FramebufferTexture2D( FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, _renderTexture.ID, 0 );
+
+            _depthBuffer = GL.GenRenderbuffer( );
+            GL.BindRenderbuffer( RenderbufferTarget.Renderbuffer, _depthBuffer );
+            GL.RenderbufferStorage( RenderbufferTarget.Renderbuffer, RenderbufferStorage.DepthComponent24, _renderTexture.Width, _renderTexture.Height );
+            GL.FramebufferRenderbuffer( FramebufferTarget.Framebuffer, FramebufferAttachment.DepthAttachment, RenderbufferTarget.Renderbuffer, _depthBuffer );
+
+            FramebufferErrorCode status = GL.CheckFramebufferStatus( FramebufferTarget.Framebuffer );
+            if ( status != FramebufferErrorCode.FramebufferComplete )
+            {
+                Console.WriteLine( "Framebuffer status: " + status );
+                throw new Exception( "Framebuffer not complete: " + status );
+            }
+
+            GL.BindFramebuffer( FramebufferTarget.Framebuffer, 0 );
+
+            _postProcessShaderProgram = Shader.FromResource( "PostFX" );
+            _hasInitialisedRenderBuffers = true;
+        }
+
+        private void DisposeFrameBuffers( )
+        {
+            if ( _frameBuffer != 0 )
+            {
+                GL.DeleteFramebuffer( _frameBuffer );
+                _frameBuffer = 0;
+            }
+
+            if ( _renderTexture != null && _renderTexture.ID != 0 )
+            {
+                GL.DeleteTexture( _renderTexture.ID );
+                _renderTexture = null;
+            }
+
+            if ( _depthBuffer != 0 )
+            {
+                GL.DeleteRenderbuffer( _depthBuffer );
+                _depthBuffer = 0;
+            }
+        }
+
+        private void CheckGLError( String operation )
+        {
+            ErrorCode error;
+            while ( ( error = GL.GetError( ) ) != ErrorCode.NoError )
+            {
+                Console.WriteLine( $"{operation}: OpenGL Error {error}" );
+            }
         }
 
         public void SetTextureFilters( TextureMinFilter min, TextureMagFilter mag )
@@ -160,64 +246,77 @@ namespace SharpQuake.Renderer.OpenGL
 
         protected override void GetAvailableModes( )
         {
-            var tmp = new List<VideoMode>( OpenTKDevice.AvailableResolutions.Count );
+            var monitor = Monitor ?? Monitors.GetPrimaryMonitor( );
+            var tmp = new List<VideoMode>( monitor.SupportedVideoModes.Count );
 
-            foreach ( var res in OpenTKDevice.AvailableResolutions )
+            foreach ( var res in monitor.SupportedVideoModes )
             {
-                if ( res.BitsPerPixel <= 8 )
+                var bitsPerPixel = res.RedBits + res.GreenBits + res.BlueBits;
+
+                if ( bitsPerPixel <= 8 )
                     continue;
 
-                Predicate<VideoMode> SameMode = delegate ( VideoMode m )
+                Predicate<VideoMode> sameMode = delegate ( VideoMode m )
                 {
-                    return ( m.Width == res.Width && m.Height == res.Height && m.BitsPerPixel == res.BitsPerPixel );
+                    return ( m.Width == res.Width && m.Height == res.Height && m.BitsPerPixel == bitsPerPixel );
                 };
 
-                if ( tmp.Exists( SameMode ) )
+                if ( tmp.Exists( sameMode ) )
                     continue;
 
                 var mode = new VideoMode( );
                 mode.Width = res.Width;
                 mode.Height = res.Height;
-                mode.BitsPerPixel = res.BitsPerPixel;
+                mode.BitsPerPixel = bitsPerPixel;
                 mode.RefreshRate = res.RefreshRate;
                 tmp.Add( mode );
             }
 
             AvailableModes = tmp.ToArray( );
 
-            FirstAvailableMode = new VideoMode( );
-            FirstAvailableMode.Width = OpenTKDevice.Width;
-            FirstAvailableMode.Height = OpenTKDevice.Height;
-            FirstAvailableMode.BitsPerPixel = OpenTKDevice.BitsPerPixel;
-            FirstAvailableMode.RefreshRate = OpenTKDevice.RefreshRate;
-            FirstAvailableMode.FullScreen = true;
+            var current = monitor.CurrentVideoMode;
+
+            FirstAvailableMode = new()
+            {
+                Width = current.Width,
+                Height = current.Height,
+                BitsPerPixel = current.RedBits + current.GreenBits + current.BlueBits,
+                RefreshRate = current.RefreshRate,
+                FullScreen = true
+            };
+        }
+
+        public override void SetMode( Int32 index, Byte[] palette )
+        {
+            base.SetMode( index, palette );
+            _hasInitialisedRenderBuffers = false;
         }
 
         protected override void ChangeMode( VideoMode mode )
         {
             try
             {
-                OpenTKDevice.ChangeResolution( mode.Width, mode.Height,
-                    mode.BitsPerPixel, mode.RefreshRate );
+                if ( Desc.IsFullScreen )
+                {
+                    var monitor = Monitor ?? Monitors.GetPrimaryMonitor( );
+                    Form.WindowBorder = TKWindowBorder.Hidden;
+                    Form.MakeFullscreen( monitor.Handle, mode.Width, mode.Height, mode.RefreshRate );
+                }
+                else
+                {
+                    Form.WindowState = TKWindowState.Normal;
+                    Form.WindowBorder = TKWindowBorder.Fixed;
+                    Form.ClientSize = new TKVector2i( mode.Width, mode.Height );
+                }
             }
             catch ( Exception ex )
             {
                 Utilities.Error( $"Couldn't set video mode: {ex.Message}" );
             }
 
-            if ( Desc.IsFullScreen )
-            {
-                Form.WindowState = OpenTK.WindowState.Fullscreen;
-                Form.WindowBorder = OpenTK.WindowBorder.Hidden;
-            }
-            else
-            {
-                Form.WindowState = OpenTK.WindowState.Normal;
-                Form.WindowBorder = OpenTK.WindowBorder.Fixed;
-            }
-
-            Desc.ActualWidth = Form.ClientSize.Width;
-            Desc.ActualHeight = Form.ClientSize.Height;
+            Desc.ActualWidth = Form.ClientSize.X;
+            Desc.ActualHeight = Form.ClientSize.Y;
+            _hasInitialisedRenderBuffers = false;
         }
 
         public override void BeginScene( )
@@ -252,7 +351,7 @@ namespace SharpQuake.Renderer.OpenGL
             Form?.SwapBuffers( );
         }
 
-        public override void SetZWrite( System.Boolean enable )
+        public override void SetZWrite( Boolean enable )
         {
             GL.DepthMask( enable );
         }
@@ -264,6 +363,8 @@ namespace SharpQuake.Renderer.OpenGL
 
         public override void Begin2DScene( )
         {
+            End3DRenderTarget( );
+
             SetViewport( Desc.ViewRect );
 
             GL.MatrixMode( MatrixMode.Projection );
@@ -279,31 +380,46 @@ namespace SharpQuake.Renderer.OpenGL
             GL.Enable( EnableCap.AlphaTest );
 
             GL.Color4( 1.0f, 1.0f, 1.0f, 1.0f );
+
+            RenderPostFX( );
         }
 
         public override void End2DScene( )
         {
-
         }
 
-        float rads = 0.0174533f;
-
-        public override void Setup3DScene( System.Boolean cull, refdef_t renderDef, System.Boolean isEnvMap )
+        public override void Begin3DRenderTarget( )
         {
-            //GL.ClearColor( Color.Black );
-            //GL.Clear( ClearBufferMask.DepthBufferBit | ClearBufferMask.ColorBufferBit );
+            GL.BindFramebuffer( FramebufferTarget.Framebuffer, _frameBuffer );
+        }
 
-            //
-            // set up viewpoint
-            //
+        public override void End3DRenderTarget( )
+        {
+            GL.BindFramebuffer( FramebufferTarget.Framebuffer, 0 );
+        }
+
+        public override void RenderPostFX( )
+        {
+            if ( _renderTexture == null )
+                return;
+
+            _postProcessShaderProgram.Use( );
+
+            Graphics.DrawTexture2D( _renderTexture );
+
+            GL.UseProgram( 0 );
+        }
+
+        public override void Setup3DScene( Boolean cull, refdef_t renderDef, Boolean isEnvMap )
+        {
             GL.MatrixMode( MatrixMode.Projection );
             GL.LoadIdentity( );
+
             var x = renderDef.vrect.x * Desc.ActualWidth / Desc.Width;
             var x2 = ( renderDef.vrect.x + renderDef.vrect.width ) * Desc.ActualWidth / Desc.Width;
             var y = ( Desc.Height - renderDef.vrect.y ) * Desc.ActualHeight / Desc.Height;
             var y2 = ( Desc.Height - ( renderDef.vrect.y + renderDef.vrect.height ) ) * Desc.ActualHeight / Desc.Height;
 
-            // fudge around because of frac screen scale
             if ( x > 0 )
                 x--;
             if ( x2 < Desc.ActualWidth )
@@ -337,25 +453,12 @@ namespace SharpQuake.Renderer.OpenGL
 
             WorldMatrix = View * Projection;
 
-            // Apply our custom matrix instead of doing transforms via deprecated calls
             GL.MatrixMode( MatrixMode.Projection );
             GL.LoadMatrix( ref Projection );
 
             GL.MatrixMode( MatrixMode.Modelview );
             GL.LoadMatrix( ref View );
 
-            // This is the old code which introduces additional latency as GetFloat communicates with GPU
-            //GL.Rotate( -90f, 1, 0, 0 );	    // put Z going up
-            //GL.Rotate( 90f, 0, 0, 1 );	    // put Z going up
-            //GL.Rotate( -renderDef.viewangles.Z, 1, 0, 0 );
-            //GL.Rotate( -renderDef.viewangles.X, 0, 1, 0 );
-            //GL.Rotate( -renderDef.viewangles.Y, 0, 0, 1 );
-            //GL.Translate( -renderDef.vieworg.X, -renderDef.vieworg.Y, -renderDef.vieworg.Z );
-            //GL.GetFloat( GetPName.ModelviewMatrix, out WorldMatrix );
-
-            //
-            // set drawing parms
-            //
             if ( cull )
                 GL.Enable( EnableCap.CullFace );
             else
@@ -364,41 +467,31 @@ namespace SharpQuake.Renderer.OpenGL
             GL.Disable( EnableCap.Blend );
             GL.Disable( EnableCap.AlphaTest );
             GL.Enable( EnableCap.DepthTest );
+
+            ConfigureFrameBuffers( );
+            Begin3DRenderTarget( );
         }
 
         /// <summary>
-        /// Build view matrix
+        /// Build view matrix.
         /// </summary>
-        /// <remarks>
-        /// (Used instead of legacy GL calls as glGetFloat adds unneeded overhead on CPU and GPU, GL transforms are deprecated in newer GL)
-        /// </remarks>
-        /// <param name="renderDef"></param>
         private void BuildViewMatrix( refdef_t renderDef )
         {
             View =
-                OpenTK.Matrix4.CreateTranslation( new OpenTK.Vector3( -renderDef.vieworg.X, -renderDef.vieworg.Y, -renderDef.vieworg.Z ) ) *
-                OpenTK.Matrix4.CreateRotationZ( MathHelper.DegreesToRadians( -renderDef.viewangles.Y ) ) *
-                OpenTK.Matrix4.CreateRotationY( MathHelper.DegreesToRadians( -renderDef.viewangles.X ) ) *
-                OpenTK.Matrix4.CreateRotationX( MathHelper.DegreesToRadians( -renderDef.viewangles.Z ) ) *
-                OpenTK.Matrix4.CreateRotationZ( MathHelper.DegreesToRadians( 90f ) ) * // put Z going up
-                OpenTK.Matrix4.CreateRotationX( MathHelper.DegreesToRadians( -90f ) ); // put Z going up
+                TKMatrix4.CreateTranslation( new TKVector3( -renderDef.vieworg.X, -renderDef.vieworg.Y, -renderDef.vieworg.Z ) ) *
+                TKMatrix4.CreateRotationZ( TKMathHelper.DegreesToRadians( -renderDef.viewangles.Y ) ) *
+                TKMatrix4.CreateRotationY( TKMathHelper.DegreesToRadians( -renderDef.viewangles.X ) ) *
+                TKMatrix4.CreateRotationX( TKMathHelper.DegreesToRadians( -renderDef.viewangles.Z ) ) *
+                TKMatrix4.CreateRotationZ( TKMathHelper.DegreesToRadians( 90f ) ) *
+                TKMatrix4.CreateRotationX( TKMathHelper.DegreesToRadians( -90f ) );
         }
 
         private void BuildProjectionMatrix( Single fovy, Single aspect, Single zNear, Single zFar )
         {
-            // Use Matrix operations instead of the deprecated glFrustum function
-            Projection = OpenTK.Matrix4.CreatePerspectiveFieldOfView( MathHelper.DegreesToRadians( fovy ), aspect, zNear, zFar );
-
-            //var ymax = zNear * Math.Tan( fovy * Math.PI / 360.0 );
-            //var ymin = -ymax;
-
-            //var xmin = ymin * aspect;
-            //var xmax = ymax * aspect;
-
-            //GL.Frustum( xmin, xmax, ymin, ymax, zNear, zFar );
+            Projection = TKMatrix4.CreatePerspectiveFieldOfView( TKMathHelper.DegreesToRadians( fovy ), aspect, zNear, zFar );
         }
 
-        public override void Clear( System.Boolean zTrick, Single clear )
+        public override void Clear( Boolean zTrick, Single clear )
         {
             if ( zTrick )
             {
@@ -422,11 +515,7 @@ namespace SharpQuake.Renderer.OpenGL
             else
             {
                 if ( clear != 0 )
-                {
                     GL.Clear( ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit );
-                    // Uze
-                    //Host.StatusBar.Changed( );
-                }
                 else
                     GL.Clear( ClearBufferMask.DepthBufferBit );
 
@@ -443,17 +532,11 @@ namespace SharpQuake.Renderer.OpenGL
             GL.DepthRange( minimum, maximum );
         }
 
-        public override void SetDrawBuffer( System.Boolean isFront )
+        public override void SetDrawBuffer( Boolean isFront )
         {
-            if ( isFront )
-                GL.DrawBuffer( DrawBufferMode.Front );
-            else
-                GL.DrawBuffer( DrawBufferMode.Back );
+            GL.DrawBuffer( isFront ? DrawBufferMode.Front : DrawBufferMode.Back );
         }
 
-        ///<summary>
-        /// Needed probably for GL only
-        ///</summary>
         public override void Finish( )
         {
             GL.Finish( );
@@ -467,11 +550,11 @@ namespace SharpQuake.Renderer.OpenGL
             switch ( target )
             {
                 case MTexTarget.TEXTURE0_SGIS:
-                    GL.Arb.ActiveTexture( TextureUnit.Texture0 );
+                    GL.ActiveTexture( TextureUnit.Texture0 );
                     break;
 
                 case MTexTarget.TEXTURE1_SGIS:
-                    GL.Arb.ActiveTexture( TextureUnit.Texture1 );
+                    GL.ActiveTexture( TextureUnit.Texture1 );
                     break;
 
                 default:
@@ -490,9 +573,6 @@ namespace SharpQuake.Renderer.OpenGL
             }
         }
 
-        /// <summary>
-        /// GL_EnableMultitexture
-        /// </summary>
         public override void EnableMultitexture( )
         {
             if ( Desc.SupportsMultiTexture )
@@ -515,23 +595,54 @@ namespace SharpQuake.Renderer.OpenGL
                 return;
             }
 
-            using ( var bmp = new Bitmap( Desc.ActualWidth, Desc.ActualHeight ) )
+            using ( fs )
             {
-                var data = bmp.LockBits( new Rectangle( 0, 0, Desc.ActualWidth, Desc.ActualHeight ), System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb );
+                var width = Desc.ActualWidth;
+                var height = Desc.ActualHeight;
 
-                GL.ReadPixels( 0, 0, Desc.ActualWidth, Desc.ActualHeight, PixelFormat.Bgr, PixelType.UnsignedByte, data.Scan0 );
+                var pixels = new Byte[width * height * 3];
 
-                bmp.UnlockBits( data );
+                GL.PixelStore( PixelStoreParameter.PackAlignment, 1 );
 
-                bmp.RotateFlip( RotateFlipType.RotateNoneFlipY );
+                GL.ReadPixels(
+                    0,
+                    0,
+                    width,
+                    height,
+                    PixelFormat.Rgb,
+                    PixelType.UnsignedByte,
+                    pixels );
 
-                var encoder = System.Drawing.Imaging.ImageCodecInfo.GetImageEncoders( ).First( c => c.FormatID == System.Drawing.Imaging.ImageFormat.Jpeg.Guid );
-                var encParams = new System.Drawing.Imaging.EncoderParameters( ) { Param = new[] { new System.Drawing.Imaging.EncoderParameter( System.Drawing.Imaging.Encoder.Quality, 100L ) } };
+                FlipScreenShot( pixels, width, height );
 
-                bmp.Save( fs, encoder, encParams );
+                var writer = new ImageWriter( );
+
+                writer.WriteJpg(
+                    pixels,
+                    width,
+                    height,
+                    ColorComponents.RedGreenBlue,
+                    fs,
+                    100 );
             }
 
             ConsoleWrapper.Print( "Wrote {0}\n", Path.GetFileName( path ) );
+        }
+
+        private static void FlipScreenShot( Byte[] pixels, Int32 width, Int32 height )
+        {
+            var stride = width * 3;
+            var temp = new Byte[stride];
+
+            for ( var y = 0; y < height / 2; y++ )
+            {
+                var top = y * stride;
+                var bottom = ( height - y - 1 ) * stride;
+
+                Buffer.BlockCopy( pixels, top, temp, 0, stride );
+                Buffer.BlockCopy( pixels, bottom, pixels, top, stride );
+                Buffer.BlockCopy( temp, 0, pixels, bottom, stride );
+            }
         }
 
         /// <summary>
@@ -546,86 +657,79 @@ namespace SharpQuake.Renderer.OpenGL
             GL.Rotate( angles.Z, 1, 0, 0 );
         }
 
-		/// <summary>
-		/// R_BlendedRotateForEntity
-		/// </summary>
-		public override void BlendedRotateForEntity( Vector3 origin, Vector3 angles, Double realTime, ref Vector3 origin1, ref Vector3 origin2, ref Single translateStartTime, ref Vector3 angles1, ref Vector3 angles2, ref Single rotateStartTime )
-		{
-			// positional interpolation
+        /// <summary>
+        /// R_BlendedRotateForEntity
+        /// </summary>
+        public override void BlendedRotateForEntity( Vector3 origin, Vector3 angles, Double realTime, ref Vector3 origin1, ref Vector3 origin2, ref Single translateStartTime, ref Vector3 angles1, ref Vector3 angles2, ref Single rotateStartTime )
+        {
+            var blend = 0f;
+            var timepassed = realTime - translateStartTime;
 
-			var blend = 0f;
-			var timepassed = realTime - translateStartTime;
+            if ( translateStartTime == 0 || timepassed > 1 )
+            {
+                translateStartTime = ( Single ) realTime;
 
-			if ( translateStartTime == 0 || timepassed > 1 )
-			{
-				translateStartTime = ( Single ) realTime;
+                origin1 = new Vector3( origin );
+                origin2 = new Vector3( origin );
+                blend = 0f;
+            }
 
-				origin1 = new Vector3( origin );
-				origin2 = new Vector3( origin );
-				blend = 0f;
-			}
-			if ( origin != origin2 )
-			{
-				translateStartTime = ( Single ) realTime;
-				origin1 = new Vector3( origin2 );
-				origin2 = new Vector3( origin );
-				blend = 0;
-			}
-			else
-			{
-				blend = ( Single ) ( timepassed / 0.1f );
+            if ( origin != origin2 )
+            {
+                translateStartTime = ( Single ) realTime;
+                origin1 = new Vector3( origin2 );
+                origin2 = new Vector3( origin );
+                blend = 0;
+            }
+            else
+            {
+                blend = ( Single ) ( timepassed / 0.1f );
 
-				if ( /*cl.paused || */blend > 1 )
-					blend = 1;
-			}
+                if ( blend > 1 )
+                    blend = 1;
+            }
 
-			var d = origin2 - origin1;
+            var d = origin2 - origin1;
 
-			GL.Translate( origin1.X + ( blend * d[0] ), origin1.Y + ( blend * d[1] ), origin1.Z + ( blend * d[2] ) );
+            GL.Translate( origin1.X + ( blend * d[0] ), origin1.Y + ( blend * d[1] ), origin1.Z + ( blend * d[2] ) );
 
-			// orientation interpolation (Euler angles, yuck!)
+            timepassed = realTime - rotateStartTime;
 
-			timepassed = realTime - rotateStartTime;
+            if ( rotateStartTime == 0 || timepassed > 1 )
+            {
+                rotateStartTime = ( Single ) realTime;
+                angles1 = new Vector3( angles );
+                angles2 = new Vector3( angles );
+            }
 
-			if ( rotateStartTime == 0 || timepassed > 1 )
-			{
-				rotateStartTime = ( Single ) realTime;
-				angles1 = new Vector3( angles );
-				angles2 = new Vector3( angles );
-			}
+            if ( angles != angles2 )
+            {
+                rotateStartTime = ( Single ) realTime;
+                angles1 = new Vector3( angles2 );
+                angles2 = new Vector3( angles );
+                blend = 0;
+            }
+            else
+            {
+                blend = ( Single ) ( timepassed / 0.1 );
 
-			if ( angles != angles2 )
-			{
-				rotateStartTime = ( Single ) realTime;
-				angles1 = new Vector3( angles2 );
-				angles2 = new Vector3( angles );
-				blend = 0;
-			}
-			else
-			{
-				blend = ( Single ) ( timepassed / 0.1 );
+                if ( blend > 1 )
+                    blend = 1;
+            }
 
-				if ( /*cl.paused ||*/ blend > 1 ) blend = 1;
-			}
+            d = angles2 - angles1;
 
-			d = angles2 - angles1;
+            for ( var i = 0; i < 3; i++ )
+            {
+                if ( d[i] > 180 )
+                    d[i] -= 360;
+                else if ( d[i] < -180 )
+                    d[i] += 360;
+            }
 
-			// always interpolate along the shortest path
-			for ( var i = 0; i < 3; i++ )
-			{
-				if ( d[i] > 180 )
-				{
-					d[i] -= 360;
-				}
-				else if ( d[i] < -180 )
-				{
-					d[i] += 360;
-				}
-			}
-
-			GL.Rotate( angles1.Y + ( blend * d[1] ), 0, 0, 1 );
-			GL.Rotate( -angles1.X + ( -blend * d[0] ), 0, 1, 0 );
-			GL.Rotate( angles1.Z + ( blend * d[2] ), 1, 0, 0 );
-		}
-	}
+            GL.Rotate( angles1.Y + ( blend * d[1] ), 0, 0, 1 );
+            GL.Rotate( -angles1.X + ( -blend * d[0] ), 0, 1, 0 );
+            GL.Rotate( angles1.Z + ( blend * d[2] ), 1, 0, 0 );
+        }
+    }
 }

@@ -29,8 +29,6 @@ using SharpQuake.Framework.Mathematics;
 using SharpQuake.Game.Data.Models;
 using SharpQuake.Game.World;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace SharpQuake.Game.Client
 {

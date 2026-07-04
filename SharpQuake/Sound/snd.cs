@@ -23,7 +23,6 @@
 /// </copyright>
 
 using System;
-using SharpQuake.Factories;
 using SharpQuake.Framework;
 using SharpQuake.Framework.Factories.IO;
 using SharpQuake.Framework.IO;
@@ -31,7 +30,6 @@ using SharpQuake.Framework.IO.Sound;
 using SharpQuake.Framework.Logging;
 using SharpQuake.Framework.Mathematics;
 using SharpQuake.Game.Client;
-using SharpQuake.Logging;
 using SharpQuake.Sys;
 
 // sound.h -- client sound i/o functions

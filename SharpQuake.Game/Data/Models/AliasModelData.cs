@@ -6,10 +6,7 @@ using SharpQuake.Framework.IO.Alias;
 using SharpQuake.Framework.Mathematics;
 using SharpQuake.Framework.Rendering;
 using SharpQuake.Game.Rendering.Textures;
-using System.Text;
 using System.IO;
-using SharpQuake.Framework.IO;
-using System.Diagnostics;
 
 namespace SharpQuake.Game.Data.Models
 {

@@ -296,5 +296,324 @@ namespace SharpQuake.Framework
             (Byte)'-', (Byte)'+', (Byte)'[', (Byte)']', (Byte)';', (Byte)'\'', (Byte)',', (Byte)'.', // 120 - 127
             (Byte)'/', (Byte)'\\' // 128 - 129
         };
-	}
+
+        public static Int32 Translate( Key key )
+        {
+            switch ( key )
+            {
+                case Key.Tab:
+                    return K_TAB;
+
+                case Key.Enter:
+                case Key.KeyPadEnter:
+                    return K_ENTER;
+
+                case Key.Escape:
+                    return K_ESCAPE;
+
+                case Key.Space:
+                    return K_SPACE;
+
+                case Key.Backspace:
+                    return K_BACKSPACE;
+
+                case Key.Up:
+                    return K_UPARROW;
+
+                case Key.Down:
+                    return K_DOWNARROW;
+
+                case Key.Left:
+                    return K_LEFTARROW;
+
+                case Key.Right:
+                    return K_RIGHTARROW;
+
+                case Key.LeftAlt:
+                case Key.RightAlt:
+                    return K_ALT;
+
+                case Key.LeftControl:
+                case Key.RightControl:
+                    return K_CTRL;
+
+                case Key.LeftShift:
+                case Key.RightShift:
+                    return K_SHIFT;
+
+                case Key.F1:
+                    return K_F1;
+
+                case Key.F2:
+                    return K_F2;
+
+                case Key.F3:
+                    return K_F3;
+
+                case Key.F4:
+                    return K_F4;
+
+                case Key.F5:
+                    return K_F5;
+
+                case Key.F6:
+                    return K_F6;
+
+                case Key.F7:
+                    return K_F7;
+
+                case Key.F8:
+                    return K_F8;
+
+                case Key.F9:
+                    return K_F9;
+
+                case Key.F10:
+                    return K_F10;
+
+                case Key.F11:
+                    return K_F11;
+
+                case Key.F12:
+                    return K_F12;
+
+                case Key.Insert:
+                    return K_INS;
+
+                case Key.Delete:
+                    return K_DEL;
+
+                case Key.PageDown:
+                    return K_PGDN;
+
+                case Key.PageUp:
+                    return K_PGUP;
+
+                case Key.Home:
+                    return K_HOME;
+
+                case Key.End:
+                    return K_END;
+
+                case Key.Pause:
+                    return K_PAUSE;
+
+                /*
+                    * Preserve the old KeyTable keypad behaviour.
+                    *
+                    * Your previous table mapped keypad numbers to navigation keys,
+                    * not to '0'..'9':
+                    *
+                    * Keypad0 -> INS
+                    * Keypad1 -> END
+                    * Keypad2 -> DOWN
+                    * Keypad3 -> PGDN
+                    * Keypad4 -> LEFT
+                    * Keypad5 -> 0
+                    * Keypad6 -> RIGHT
+                    * Keypad7 -> HOME
+                    * Keypad8 -> UP
+                    * Keypad9 -> PGUP
+                    */
+                case Key.KeyPad0:
+                    return K_INS;
+
+                case Key.KeyPad1:
+                    return K_END;
+
+                case Key.KeyPad2:
+                    return K_DOWNARROW;
+
+                case Key.KeyPad3:
+                    return K_PGDN;
+
+                case Key.KeyPad4:
+                    return K_LEFTARROW;
+
+                case Key.KeyPad5:
+                    return 0;
+
+                case Key.KeyPad6:
+                    return K_RIGHTARROW;
+
+                case Key.KeyPad7:
+                    return K_HOME;
+
+                case Key.KeyPad8:
+                    return K_UPARROW;
+
+                case Key.KeyPad9:
+                    return K_PGUP;
+
+                case Key.KeyPadDivide:
+                    return '/';
+
+                case Key.KeyPadMultiply:
+                    return '*';
+
+                case Key.KeyPadSubtract:
+                    return '-';
+
+                case Key.KeyPadAdd:
+                    return '+';
+
+                case Key.KeyPadDecimal:
+                    return '.';
+
+                /*
+                    * Normal keys should be passed as lower-case ASCII.
+                    */
+                case Key.A:
+                    return 'a';
+
+                case Key.B:
+                    return 'b';
+
+                case Key.C:
+                    return 'c';
+
+                case Key.D:
+                    return 'd';
+
+                case Key.E:
+                    return 'e';
+
+                case Key.F:
+                    return 'f';
+
+                case Key.G:
+                    return 'g';
+
+                case Key.H:
+                    return 'h';
+
+                case Key.I:
+                    return 'i';
+
+                case Key.J:
+                    return 'j';
+
+                case Key.K:
+                    return 'k';
+
+                case Key.L:
+                    return 'l';
+
+                case Key.M:
+                    return 'm';
+
+                case Key.N:
+                    return 'n';
+
+                case Key.O:
+                    return 'o';
+
+                case Key.P:
+                    return 'p';
+
+                case Key.Q:
+                    return 'q';
+
+                case Key.R:
+                    return 'r';
+
+                case Key.S:
+                    return 's';
+
+                case Key.T:
+                    return 't';
+
+                case Key.U:
+                    return 'u';
+
+                case Key.V:
+                    return 'v';
+
+                case Key.W:
+                    return 'w';
+
+                case Key.X:
+                    return 'x';
+
+                case Key.Y:
+                    return 'y';
+
+                case Key.Z:
+                    return 'z';
+
+                case Key.Number0:
+                    return '0';
+
+                case Key.Number1:
+                    return '1';
+
+                case Key.Number2:
+                    return '2';
+
+                case Key.Number3:
+                    return '3';
+
+                case Key.Number4:
+                    return '4';
+
+                case Key.Number5:
+                    return '5';
+
+                case Key.Number6:
+                    return '6';
+
+                case Key.Number7:
+                    return '7';
+
+                case Key.Number8:
+                    return '8';
+
+                case Key.Number9:
+                    return '9';
+
+                case Key.GraveAccent:
+                    return '`';
+
+                case Key.Minus:
+                    return '-';
+
+                /*
+                    * OpenTK 4 calls this Equal, because it is the physical '=' key.
+                    *
+                    * Your old OpenTK 3 table mapped Key.Plus to '+', so this keeps
+                    * your previous behaviour. If you want layout-correct typed text,
+                    * use TextInput for console text instead.
+                    */
+                case Key.Equal:
+                    return '+';
+
+                case Key.BracketLeft:
+                    return '[';
+
+                case Key.BracketRight:
+                    return ']';
+
+                case Key.Semicolon:
+                    return ';';
+
+                case Key.Apostrophe:
+                    return '\'';
+
+                case Key.Comma:
+                    return ',';
+
+                case Key.Period:
+                    return '.';
+
+                case Key.Slash:
+                    return '/';
+
+                case Key.Backslash:
+                    return '\\';
+
+                default:
+                    return 0;
+            }
+        }
+    }
 }

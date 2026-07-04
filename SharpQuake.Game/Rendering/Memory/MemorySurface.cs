@@ -24,7 +24,6 @@
 
 using System;
 using SharpQuake.Framework;
-using SharpQuake.Framework.Mathematics;
 
 namespace SharpQuake.Game.Rendering.Memory
 {

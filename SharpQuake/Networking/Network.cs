@@ -28,17 +28,13 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text;
-using SharpQuake.Desktop;
-using SharpQuake.Factories;
 using SharpQuake.Framework;
 using SharpQuake.Framework.Factories.IO;
 using SharpQuake.Framework.IO;
 using SharpQuake.Framework.Logging;
 using SharpQuake.Game.Client;
-using SharpQuake.Logging;
 using SharpQuake.Networking.Client;
 using SharpQuake.Networking.Server;
-using SharpQuake.Rendering;
 using SharpQuake.Services;
 using SharpQuake.Sys;
 

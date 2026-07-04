@@ -23,19 +23,15 @@
 /// </copyright>
 
 using System;
-using System.Linq;
 using SharpQuake.Framework;
+using SharpQuake.Framework.Definitions;
 using SharpQuake.Framework.IO.BSP;
 using SharpQuake.Framework.Mathematics;
 using SharpQuake.Game.Data.Models;
 using SharpQuake.Game.Rendering.Memory;
-using SharpQuake.Game.Rendering.Textures;
 using SharpQuake.Game.World;
 using SharpQuake.Networking.Client;
-using SharpQuake.Renderer;
-using SharpQuake.Renderer.OpenGL.Textures;
 using SharpQuake.Renderer.Textures;
-using SharpQuake.Rendering;
 using SharpQuake.Sys;
 
 // gl_rsurf.c
@@ -401,7 +397,7 @@ namespace SharpQuake.Rendering.Environment
 			if ( ( fa.flags & ( Int32 ) Q1SurfaceFlags.Sky ) != 0 )
 			{   // warp texture, no lightmaps
                 _gameRenderer.WarpableTextures.EmitBothSkyLayers( Time.Absolute, _renderer.Origin, fa );
-				return;
+                return;
 			}
 
 			var t = _renderer.TextureAnimation( fa.texinfo.texture );
@@ -409,15 +405,20 @@ namespace SharpQuake.Rendering.Environment
 
 			if ( ( fa.flags & ( Int32 ) Q1SurfaceFlags.Turbulence ) != 0 )
 			{   // warp texture, no lightmaps
-                _gameRenderer.WarpableTextures.EmitWaterPolys( Time.Absolute, fa );
-				return;
+                //_gameRenderer.WarpableTextures.EmitWaterPolys( Time.Absolute, fa );
+                model.DrawPoly( fa, true, Time.Absolute, true, WarpDef.TURBSCALE );
+                return;
 			}
 
 			if ( ( fa.flags & ( Int32 ) Q1SurfaceFlags.Underwater ) != 0 )
-				_video.Device.Graphics.DrawWaterPoly( fa.polys, Time.Absolute );
-			else			{
+			{
+				//_video.Device.Graphics.DrawWaterPoly( fa.polys, Time.Absolute );
+                model.DrawPoly( fa, false, Time.Absolute, false, 0 );
+            }
+			else			
+			{
 				//fa.NewPoly.LightMapTextureNum = fa.lightmaptexturenum;
-				model.DrawPoly( fa, _renderer.World.Lighting.LightMapTexture, _renderer.World.Lighting.LightMaps );
+				model.DrawPoly( fa, false, Time.Absolute, false, 0 );
             }
 			//else
 			//	_video.Device.Graphics.DrawPoly( fa.polys, t.scaleX, t.scaleY );
@@ -475,6 +476,7 @@ namespace SharpQuake.Rendering.Environment
 		/// Systems that have fast state and texture changes can
 		/// just do everything as it passes with no need to sort
 		/// </summary>
+		[Obsolete]
 		private void DrawSequentialPoly( MemorySurface s )
 		{
 			//

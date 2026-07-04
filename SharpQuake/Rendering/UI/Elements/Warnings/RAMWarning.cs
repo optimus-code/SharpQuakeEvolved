@@ -22,7 +22,6 @@
 /// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 /// </copyright>
 
-using SharpQuake.Factories;
 using SharpQuake.Framework.Factories.IO.WAD;
 using SharpQuake.Renderer.Textures;
 using SharpQuake.Sys;

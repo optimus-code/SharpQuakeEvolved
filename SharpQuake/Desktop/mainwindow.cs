@@ -23,13 +23,11 @@
 /// </copyright>
 
 using System;
-using System.Diagnostics;
 using System.Drawing;
 using SharpQuake.Desktop;
 using SharpQuake.Framework;
 using SharpQuake.Framework.IO.Input;
 using SharpQuake.Framework.Logging;
-using SharpQuake.Logging;
 using SharpQuake.Renderer;
 using SharpQuake.Renderer.OpenGL.Desktop;
 using SharpQuake.Sys;
@@ -147,16 +145,12 @@ namespace SharpQuake
 
         private Int32 MapKey( Key srcKey )
         {
-            var key = ( Int32 ) srcKey;
-            key &= 255;
+            var key = KeysDef.Translate( srcKey );
 
-            if ( key >= KeysDef.KeyTable.Length )
-                return 0;
-
-            if ( KeysDef.KeyTable[key] == 0 )
+            if ( key == 0 )
                 _logger.DPrint( "key 0x{0:X} has no translation\n", key );
 
-            return KeysDef.KeyTable[key];
+            return key;
         }
 
         private void Keyboard_KeyUp( Object sender, KeyboardKeyEventArgs e )

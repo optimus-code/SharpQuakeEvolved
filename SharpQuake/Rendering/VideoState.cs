@@ -23,7 +23,6 @@
 /// </copyright>
 /// 
 
-using NVorbis.OpenTKSupport;
 using SharpQuake.Framework;
 using SharpQuake.Framework.Logging;
 using System;

@@ -26,7 +26,7 @@ using System;
 
 namespace SharpQuake.Renderer.Textures
 {
-    public class BaseTextureBlendMode
+    public abstract class BaseTextureBlendMode
     {
         public virtual String Name
         {

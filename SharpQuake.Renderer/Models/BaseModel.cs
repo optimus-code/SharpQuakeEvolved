@@ -24,13 +24,10 @@
 
 using System;
 using System.Collections.Generic;
-using SharpQuake.Framework;
-using SharpQuake.Framework.Mathematics;
-using SharpQuake.Renderer.Textures;
 
 namespace SharpQuake.Renderer.Models
 {
-	public class BaseModel : IDisposable
+	public abstract class BaseModel : IDisposable
 	{
 		public BaseDevice Device
 		{

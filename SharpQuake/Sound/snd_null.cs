@@ -1,7 +1,5 @@
 
 using SharpQuake.Framework.IO.Sound;
-using SharpQuake.Framework.Logging;
-using SharpQuake.Logging;
 /// <copyright>
 ///
 /// SharpQuakeEvolved changes by optimus-code, 2019-2023

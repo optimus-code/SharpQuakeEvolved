@@ -30,7 +30,6 @@ using System.Drawing;
 using SharpQuake.Framework.Mathematics;
 using SharpQuake.Framework;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 
 namespace SharpQuake.Renderer.OpenGL
 {
@@ -118,7 +117,31 @@ namespace SharpQuake.Renderer.OpenGL
 
             GL.Disable( EnableCap.Texture2D );
         }
-        
+
+        public override void DrawTexture2D( IRenderTexture texture )
+        {
+            GL.Enable( EnableCap.Texture2D );
+
+            GL.BindTexture( TextureTarget.Texture2D, texture.ID );
+            
+            GL.Begin( PrimitiveType.Quads );
+
+            GL.Color3( 1f, 1f, 1f );
+
+            GL.TexCoord2( 0.0f, 1.0f ); GL.Vertex2( 0.0f, 0.0f );
+            GL.TexCoord2( 1.0f, 1.0f ); GL.Vertex2( texture.Width, 0.0f );
+            GL.TexCoord2( 1.0f, 0.0f ); GL.Vertex2( texture.Width, texture.Height );
+            GL.TexCoord2( 0.0f, 0.0f ); GL.Vertex2( 0.0f, texture.Height );
+
+            GL.End( );
+
+            GL.Color3( 1f, 1f, 1f );
+
+            GL.BindTexture( TextureTarget.Texture2D, 0);
+
+            GL.Disable( EnableCap.Texture2D );
+        }
+
         public override void BeginParticles( BaseTexture texture )
         {
             base.BeginParticles( texture );
@@ -222,8 +245,6 @@ namespace SharpQuake.Renderer.OpenGL
         {
             GL.Color3( 1f, 1f, 1f );
             GL.Enable( EnableCap.Texture2D );
-
-            //texture.Bind( );
 
             for ( var p = polys; p != null; p = p.next )
             {

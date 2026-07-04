@@ -23,10 +23,7 @@
 /// </copyright>
 
 using System;
-using System.Windows.Forms;
-using System.Xml.Linq;
 using SharpQuake.Desktop;
-using SharpQuake.Factories.Rendering;
 using SharpQuake.Factories.Rendering.UI;
 using SharpQuake.Framework;
 using SharpQuake.Framework.Definitions;
@@ -40,7 +37,6 @@ using SharpQuake.Logging;
 using SharpQuake.Networking.Client;
 using SharpQuake.Renderer;
 using SharpQuake.Rendering;
-using SharpQuake.Rendering.Cameras;
 using SharpQuake.Rendering.UI;
 using SharpQuake.Rendering.UI.Elements;
 using SharpQuake.Sys;
@@ -264,7 +260,8 @@ namespace SharpQuake
                 _gameLogger = Elements.Get<VisualConsole>( ElementFactory.CONSOLE );
 
                 if ( _gameLogger == null || !_gameLogger.IsInitialised )
-                    return;	// not initialized yet
+                    return; // not initialized yet
+
 
                 BeginRendering( );
 
@@ -294,6 +291,8 @@ namespace SharpQuake
                 _renderState.OnRender?.Invoke( );
 
                 _video.Device.Begin2DScene( );
+
+
                 //Set2D();
 
                 //

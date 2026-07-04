@@ -23,28 +23,19 @@
 /// </copyright>
 
 using System;
-using System.Linq;
 using SharpQuake.Factories.Rendering;
-using SharpQuake.Factories.Rendering.UI;
 using SharpQuake.Framework;
 using SharpQuake.Framework.Factories.IO;
 using SharpQuake.Framework.IO;
 using SharpQuake.Framework.Logging;
 using SharpQuake.Framework.Mathematics;
-using SharpQuake.Framework.World;
 using SharpQuake.Game.Data.Models;
-using SharpQuake.Game.Rendering.Memory;
 using SharpQuake.Game.Rendering.Textures;
 using SharpQuake.Game.World;
-using SharpQuake.Logging;
 using SharpQuake.Networking.Client;
-using SharpQuake.Renderer;
-using SharpQuake.Renderer.Models;
 using SharpQuake.Renderer.Textures;
 using SharpQuake.Rendering;
-using SharpQuake.Rendering.Cameras;
 using SharpQuake.Rendering.Environment;
-using SharpQuake.Rendering.UI.Elements;
 using SharpQuake.Sys;
 
 // refresh.h -- public interface to refresh functions
@@ -285,8 +276,7 @@ namespace SharpQuake
             // render normal view
 
             RenderScene( );
-            World.Entities.DrawViewModel( _IsEnvMap );
-            World.Entities.Surfaces.DrawWaterSurfaces( );
+
 
             // render mirror view
             //Mirror();
@@ -448,7 +438,7 @@ namespace SharpQuake
 
             SetupGL( );
 
-            World.Occlusion.MarkLeaves( );	// done here so we know if we're in water
+            World.Occlusion.MarkLeaves( );  // done here so we know if we're in water
 
             World.Entities.Surfaces.DrawWorld( );		// adds entities to the list
 
@@ -462,10 +452,13 @@ namespace SharpQuake
 
             World.Particles.DrawParticles( _clientState.Data.time, _clientState.Data.oldtime, Cvars.Gravity.Get<Single>( ), Origin, ViewUp, ViewRight, ViewPn );
 
-            
+
 #if GLTEST
 	        Test_Draw ();
 #endif
+
+            World.Entities.DrawViewModel( _IsEnvMap );
+            World.Entities.Surfaces.DrawWaterSurfaces( );
         }
 
 		/// <summary>

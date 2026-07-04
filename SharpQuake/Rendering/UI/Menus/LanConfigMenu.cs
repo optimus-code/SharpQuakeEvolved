@@ -29,7 +29,6 @@ using SharpQuake.Framework.Factories.IO;
 using SharpQuake.Rendering.UI.Menus;
 using SharpQuake.Sys;
 using System;
-using System.Windows.Shapes;
 
 namespace SharpQuake.Rendering.UI
 {

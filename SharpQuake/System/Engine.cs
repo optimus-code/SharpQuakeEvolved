@@ -24,10 +24,8 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using NVorbis.OpenTKSupport;
 using SharpQuake.Desktop;
 using SharpQuake.Extensions;
-using SharpQuake.Factories;
 using SharpQuake.Framework;
 using SharpQuake.Framework.IO.Input;
 using SharpQuake.Framework.IO;
@@ -43,20 +41,13 @@ using System.Drawing;
 using System.IO;
 using SharpQuake.Factories.Rendering.UI;
 using SharpQuake.Framework.Factories.IO;
-using System.Windows.Input;
-using OpenTK.Input;
 using SharpQuake.Rendering.Cameras;
 using SharpQuake.Sys.Programs;
-using System.Drawing.Imaging;
-using System.Security.Cryptography;
-using System.Windows.Media;
 using SharpQuake.Factories.Rendering;
-using SharpQuake.Framework.IO.WAD;
 using SharpQuake.Framework.Factories.IO.WAD;
 using SharpQuake.Services;
 using SharpQuake.Sys.Handlers;
 using SharpQuake.Rendering.UI.Elements;
-using System.Threading.Tasks;
 
 namespace SharpQuake.Sys
 {
@@ -357,7 +348,7 @@ namespace SharpQuake.Sys
             IsDisposing = true;
 
             // keep Con_Printf from trying to update the screen
-            Get<VideoState>().IsScreenDisabledForLoading = true;
+            //Get<VideoState>().IsScreenDisabledForLoading = true;
 
             WriteConfiguration( );
 
@@ -513,7 +504,7 @@ namespace SharpQuake.Sys
             EngineThink = Get<EngineThink>( );
             Network = Get<Network>( );
 
-            var c= Get<VisualConsole>( );
+            _ = Get<IGameConsoleLogger>( );
 
             Window.Configure( Logger, Keyboard, Mouse );
         }
@@ -534,7 +525,11 @@ namespace SharpQuake.Sys
         public TService Get<TService>()
             where TService : class
         {
-            return ServiceProvider?.GetService<TService>();
+            var service = ServiceProvider?.GetService<TService>();
+
+            ArgumentNullException.ThrowIfNull( service, typeof( TService ).FullName );
+            
+            return service;
         }
 
         /// <summary>

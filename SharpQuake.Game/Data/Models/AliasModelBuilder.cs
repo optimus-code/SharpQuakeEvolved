@@ -17,7 +17,6 @@
 using SharpQuake.Framework;
 using SharpQuake.Framework.IO;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 

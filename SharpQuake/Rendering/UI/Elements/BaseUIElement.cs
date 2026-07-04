@@ -23,7 +23,6 @@
 /// </copyright>
 
 using SharpQuake.Framework.Rendering.UI;
-using SharpQuake.Sys;
 using System;
 
 namespace SharpQuake.Rendering.UI.Elements

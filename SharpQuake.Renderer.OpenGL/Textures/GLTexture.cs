@@ -81,6 +81,7 @@ namespace SharpQuake.Renderer.OpenGL.Textures
             if ( !Desc.IsLightMap )
             {
                 GLDesc.TextureNumber = CurrentTextureNumber;
+                GL.GenTexture( );
                 GenerateTextureNumber( );
             }
         }
@@ -92,6 +93,7 @@ namespace SharpQuake.Renderer.OpenGL.Textures
             if ( !Desc.IsLightMap )
             {
                 GLDesc.TextureNumber = CurrentTextureNumber;
+                GL.GenTexture( );
                 GenerateTextureNumber( );
             }
         }

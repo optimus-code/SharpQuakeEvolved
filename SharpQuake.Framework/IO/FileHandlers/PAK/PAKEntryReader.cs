@@ -24,7 +24,6 @@
 
 using System;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 
 namespace SharpQuake.Framework.IO.FileHandlers.PAK

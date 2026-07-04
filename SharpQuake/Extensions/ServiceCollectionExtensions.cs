@@ -29,7 +29,6 @@ using SharpQuake.Framework.Factories.IO.WAD;
 using SharpQuake.Framework.Factories.IO;
 using SharpQuake.Rendering;
 using SharpQuake.Desktop;
-using SharpQuake.Sys.Handlers;
 using SharpQuake.Services;
 using SharpQuake.Sys.Programs;
 using SharpQuake.Rendering.Cameras;

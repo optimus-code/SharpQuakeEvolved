@@ -1,18 +1,4 @@
-﻿
-using SharpQuake.Framework.IO.WAD;
-using SharpQuake.Framework.IO;
-using SharpQuake.Framework;
-using SharpQuake.Renderer.Textures;
-using System.Runtime.InteropServices;
-
-using System;
-using System.Drawing;
-using static System.Net.Mime.MediaTypeNames;
-using System.Linq;
-using System.IO;
-using SharpQuake.Rendering.UI.Menus;
-using System.Windows.Media.Media3D;
-/// <copyright>
+﻿/// <copyright>
 ///
 /// SharpQuakeEvolved changes by optimus-code, 2019-2023
 /// 
@@ -35,6 +21,14 @@ using System.Windows.Media.Media3D;
 /// along with this program; if not, write to the Free Software
 /// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 /// </copyright>
+
+using SharpQuake.Framework;
+using SharpQuake.Renderer.Textures;
+using System;
+using System.Drawing;
+using System.Linq;
+using System.IO;
+using SharpQuake.Rendering.UI.Menus;
 
 namespace SharpQuake.Rendering
 {

@@ -23,7 +23,6 @@
 /// </copyright>
 
 using System;
-using System.Security.Cryptography;
 using SharpQuake.Framework;
 using SharpQuake.Framework.Factories.IO;
 using SharpQuake.Framework.IO;

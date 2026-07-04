@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <OutputType>WinExe</OutputType>
     <IsWebBootstrapper>false</IsWebBootstrapper>
@@ -19,9 +19,7 @@
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <UseWindowsForms>true</UseWindowsForms>
 	<LangVersion>10.0</LangVersion>
-    <UseWPF>true</UseWPF>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>SharpQuake.idTech1</StartupObject>
@@ -53,9 +51,6 @@
     <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System.IO.Compression" />
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="quake.ico" />
   </ItemGroup>
   <ItemGroup>
@@ -65,11 +60,11 @@
     <ProjectReference Include="..\SharpQuake.Renderer\SharpQuake.Renderer.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Hardware.Info" Version="11.1.1.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0-preview.7.23375.6" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="7.0.0" />
-    <PackageReference Include="NVorbis" Version="0.10.1" />
-    <PackageReference Include="NVorbis.OpenTKSupport" Version="1.4.0" />
-    <PackageReference Include="OpenTK" Version="3.3.1" />
+	<PackageReference Include="Hardware.Info" Version="110.0.0.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.9" />
+    <PackageReference Include="NVorbis" Version="0.10.5" />
+    <PackageReference Include="OpenTK" Version="4.9.4" />
+    <PackageReference Include="OpenTK.Audio.OpenAL" Version="4.9.4" />	  
   </ItemGroup>
 </Project>

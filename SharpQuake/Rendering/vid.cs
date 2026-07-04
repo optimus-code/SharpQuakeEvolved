@@ -25,13 +25,10 @@
 using System;
 using System.IO;
 using SharpQuake.Desktop;
-using SharpQuake.Factories.Rendering;
 using SharpQuake.Framework;
-using SharpQuake.Framework.Definitions;
 using SharpQuake.Framework.Factories.IO;
 using SharpQuake.Framework.IO;
 using SharpQuake.Framework.Logging;
-using SharpQuake.Logging;
 using SharpQuake.Renderer;
 using SharpQuake.Rendering;
 using SharpQuake.Sys;

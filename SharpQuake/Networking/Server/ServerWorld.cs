@@ -23,10 +23,7 @@
 /// </copyright>
 
 using System;
-using SharpQuake.Desktop;
-using SharpQuake.Factories.Rendering;
 using SharpQuake.Framework;
-using SharpQuake.Framework.Factories.IO;
 using SharpQuake.Framework.IO.BSP;
 using SharpQuake.Framework.Logging;
 using SharpQuake.Framework.Mathematics;

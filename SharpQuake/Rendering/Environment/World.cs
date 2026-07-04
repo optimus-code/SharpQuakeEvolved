@@ -25,13 +25,9 @@
 using SharpQuake.Factories.Rendering;
 using SharpQuake.Framework.Logging;
 using SharpQuake.Game.World;
-using SharpQuake.Logging;
 using SharpQuake.Networking.Client;
 using SharpQuake.Renderer;
 using SharpQuake.Rendering.Cameras;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace SharpQuake.Rendering.Environment
 {

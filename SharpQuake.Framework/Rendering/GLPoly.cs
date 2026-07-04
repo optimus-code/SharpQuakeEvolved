@@ -40,7 +40,7 @@ namespace SharpQuake.Framework
 
         public Int32 FirstVertex;
         public Int32 FirstIndex;
-        public Int32 NumFaces;
+        public Int32 NumIndices;
         public Int32 LightMapTextureNum;
 
         public object Texture; // TODO - Remove

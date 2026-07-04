@@ -30,7 +30,6 @@ using SharpQuake.Rendering.UI.Elements.Text;
 using SharpQuake.Rendering.UI.Elements.HUD;
 using SharpQuake.Rendering.UI.Elements.Warnings;
 using SharpQuake.Sys;
-using System.Windows.Forms;
 using SharpQuake.Logging;
 
 namespace SharpQuake.Factories.Rendering.UI

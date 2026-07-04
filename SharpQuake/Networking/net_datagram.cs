@@ -30,7 +30,6 @@ using SharpQuake.Framework;
 using SharpQuake.Framework.Factories.IO;
 using SharpQuake.Framework.IO;
 using SharpQuake.Framework.Logging;
-using SharpQuake.Logging;
 using SharpQuake.Networking.Server;
 
 namespace SharpQuake

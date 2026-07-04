@@ -43,7 +43,7 @@ namespace SharpQuake.Renderer
             get;
             set;
         }
-        public Single RefreshRate
+        public Int32 RefreshRate
         {
             get;
             set;

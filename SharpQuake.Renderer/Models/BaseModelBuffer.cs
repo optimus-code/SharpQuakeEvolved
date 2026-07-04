@@ -30,7 +30,7 @@ using SharpQuake.Renderer.Textures;
 
 namespace SharpQuake.Renderer.Models
 {
-    public class BaseModelBuffer : IDisposable
+    public abstract class BaseModelBuffer : IDisposable
     {
         public BufferVertex[] Vertices
         {
@@ -44,13 +44,20 @@ namespace SharpQuake.Renderer.Models
             protected set;
         }
 
+        public string ShaderName
+        {
+            get;
+            protected set;
+        }
+
         protected readonly BaseDevice _device;
 
-        public BaseModelBuffer( BaseDevice device, BufferVertex[] vertices, UInt32[] indices )
+        public BaseModelBuffer( BaseDevice device, BufferVertex[] vertices, UInt32[] indices, string shaderName = "DefaultSurface" )
         {
             _device = device;
             Vertices = vertices;
             Indices = indices;
+            ShaderName = shaderName;
         }
 
         public virtual void Begin( )
@@ -62,7 +69,7 @@ namespace SharpQuake.Renderer.Models
         {
         }
 
-        public virtual void DrawPoly( GLPoly poly, BaseTexture lightmapTexture, Byte[] lightmapData )
+        public virtual void DrawPoly( GLPoly poly )
         {
         }
 
@@ -70,7 +77,7 @@ namespace SharpQuake.Renderer.Models
         {
         }
 
-        public virtual void BeginTexture( BaseTexture texture )
+        public virtual void BeginTexture( BaseTexture texture, BaseTexture lightmapTexture, Double time, bool noLightmap, bool waveDistort, Double waveScale )
         {
         }
 
@@ -80,9 +87,9 @@ namespace SharpQuake.Renderer.Models
             Indices = null;
         }
 
-        public static BaseModelBuffer New( BaseDevice device, BufferVertex[] vertices, UInt32[] indices )
+        public static BaseModelBuffer New( BaseDevice device, BufferVertex[] vertices, UInt32[] indices, string shaderName = "DefaultSurface" )
         {
-            return ( BaseModelBuffer ) Activator.CreateInstance( device.ModelBufferType, device, vertices, indices );
+            return ( BaseModelBuffer ) Activator.CreateInstance( device.ModelBufferType, device, vertices, indices, shaderName );
         }
     }
 

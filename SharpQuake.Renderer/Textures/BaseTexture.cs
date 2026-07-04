@@ -31,12 +31,11 @@ using SharpQuake.Framework;
 using SharpQuake.Framework.IO.WAD;
 using SharpQuake.Framework.IO;
 using StbiSharp;
-using System.Diagnostics;
 using System.Linq;
 
 namespace SharpQuake.Renderer.Textures
 {
-    public class BaseTexture : IDisposable
+    public abstract class BaseTexture : IDisposable
     {
         public BaseDevice Device
         {

@@ -27,7 +27,7 @@ using System.Drawing;
 
 namespace SharpQuake.Renderer
 {
-    public class BaseDeviceDesc
+    public abstract class BaseDeviceDesc
     {
         public virtual Boolean IsFullScreen
         {

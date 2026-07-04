@@ -24,9 +24,7 @@
 
 using SharpQuake.Framework;
 using System;
-using SharpQuake.Sys.Handlers;
 using SharpQuake.Framework.Logging;
-using SharpQuake.Sys.Programs;
 
 namespace SharpQuake.Sys.Programs
 {

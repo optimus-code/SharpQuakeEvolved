@@ -27,7 +27,7 @@ using SharpQuake.Framework;
 
 namespace SharpQuake.Renderer.Textures
 {
-    public class BaseTextureAtlas : IDisposable
+    public abstract class BaseTextureAtlas : IDisposable
     {
         public BaseDevice Device
         {

@@ -23,18 +23,13 @@
 /// </copyright>
 
 using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Runtime.InteropServices;
 using SharpQuake.Factories.Rendering.UI;
 using SharpQuake.Framework;
 using SharpQuake.Framework.Factories.IO;
 using SharpQuake.Framework.Factories.IO.WAD;
 using SharpQuake.Framework.IO;
-using SharpQuake.Framework.IO.WAD;
 using SharpQuake.Framework.Logging;
-using SharpQuake.Logging;
 using SharpQuake.Renderer.Textures;
 using SharpQuake.Rendering;
 using SharpQuake.Sys;

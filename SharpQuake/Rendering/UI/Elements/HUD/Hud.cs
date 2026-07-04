@@ -29,7 +29,6 @@ using SharpQuake.Framework.IO;
 using SharpQuake.Sys;
 using SharpQuake.Framework.Factories.IO;
 using SharpQuake.Networking.Client;
-using System.Windows.Forms;
 
 // sbar.h
 

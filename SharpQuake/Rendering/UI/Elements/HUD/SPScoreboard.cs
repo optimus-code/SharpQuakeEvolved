@@ -24,7 +24,6 @@
 
 using SharpQuake.Framework;
 using SharpQuake.Networking.Client;
-using SharpQuake.Sys;
 using System;
 using System.Text;
 

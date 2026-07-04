@@ -26,7 +26,6 @@ using SharpQuake.Framework.IO.Input;
 using System;
 using System.IO;
 using System.Text;
-using System.Windows.Media.TextFormatting;
 
 namespace SharpQuake.Desktop
 {

@@ -23,7 +23,6 @@
 /// </copyright>
 
 using SharpQuake.Desktop;
-using SharpQuake.Factories;
 using SharpQuake.Factories.Rendering.UI;
 using SharpQuake.Framework;
 using SharpQuake.Framework.Factories.IO;

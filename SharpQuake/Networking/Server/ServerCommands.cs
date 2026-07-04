@@ -35,7 +35,6 @@ using SharpQuake.Networking.Client;
 using SharpQuake.Sys;
 using SharpQuake.Sys.Programs;
 using System;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text;

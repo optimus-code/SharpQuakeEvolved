@@ -1,13 +1,9 @@
 ﻿using SharpQuake.Framework;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SharpQuake.Renderer.Models
 {
-	public class BaseAliasModelDesc : BaseModelDesc
+	public abstract class BaseAliasModelDesc : BaseModelDesc
 	{
 		public virtual aliashdr_t AliasHeader
 		{

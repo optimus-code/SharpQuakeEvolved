@@ -32,7 +32,6 @@ using SharpQuake.Framework.Definitions;
 using SharpQuake.Rendering.Cameras;
 using SharpQuake.Sys;
 using SharpQuake.Framework.Factories.IO;
-using SharpQuake.Logging;
 using SharpQuake.Rendering;
 using SharpQuake.Networking.Client;
 

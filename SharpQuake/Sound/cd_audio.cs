@@ -46,17 +46,14 @@
 /// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 /// </copyright>
 
-using System;
-using System.IO;
-using NVorbis.OpenTKSupport;
-using SharpQuake.Factories;
 using SharpQuake.Framework;
 using SharpQuake.Framework.Factories.IO;
 using SharpQuake.Framework.IO;
 using SharpQuake.Framework.Logging;
-using SharpQuake.Game.Client;
-using SharpQuake.Logging;
+using SharpQuake.Sound;
 using SharpQuake.Sys;
+using System;
+using System.IO;
 
 namespace SharpQuake
 {
@@ -260,8 +257,7 @@ namespace SharpQuake
     internal class NullCDAudioController
     {
         private Byte[] _Remap;
-        private OggStream oggStream;
-        private OggStreamer streamer;
+        private OpenALVorbisStream oggStream;
         //private WaveOutEvent waveOut; // or WaveOutEvent()
         private Boolean _isLooping;
         String trackid;
@@ -377,7 +373,6 @@ namespace SharpQuake
 
         public void Initialise( )
         {
-            streamer = new OggStreamer( 441000 );
             _Volume = BgmVolume;
 
             if ( Directory.Exists( String.Format( "{0}/{1}/music/", QuakeParameter.globalbasedir, QuakeParameter.globalgameid ) ) == false )
@@ -388,109 +383,100 @@ namespace SharpQuake
 
         public void Play( Byte track, Boolean looping )
         {
-            if ( _noAudio == false )
-            {
-                trackid = track.ToString( "00" );
-                trackpath = String.Format( "{0}/{1}/music/track{2}.ogg", QuakeParameter.globalbasedir, QuakeParameter.globalgameid, trackid );
+            if ( _noAudio )
+                return;
+
+            trackid = track.ToString( "00" );
+            trackpath = String.Format(
+                "{0}/{1}/music/track{2}.ogg",
+                QuakeParameter.globalbasedir,
+                QuakeParameter.globalgameid,
+                trackid );
+
 #if DEBUG
-                Console.WriteLine( "DEBUG: track path:{0} ", trackpath );
+            Console.WriteLine( "DEBUG: track path:{0} ", trackpath );
 #endif
-                try
-                {
-                    _isLooping = looping;
-                    if ( oggStream != null )
-                        oggStream.Stop( );
-                    oggStream = new OggStream( trackpath, 3 );
-                    oggStream.IsLooped = looping;
-                    oggStream.Play( );
-                    oggStream.Volume = _Volume;
-                    _noPlayback = false;
-                }
-                catch ( Exception e )
-                {
-                    Console.WriteLine( "Could not find or play {0}", trackpath );
-                    _noPlayback = true;
-                    //throw;
-                }
+
+            try
+            {
+                _isLooping = looping;
+
+                oggStream?.Dispose( );
+
+                oggStream = new OpenALVorbisStream( trackpath, looping );
+                oggStream.Volume = _Volume;
+                oggStream.Play( );
+
+                _isPlaying = true;
+                _isPaused = false;
+                _noPlayback = false;
+            }
+            catch ( Exception )
+            {
+                Console.WriteLine( "Could not find or play {0}", trackpath );
+
+                oggStream?.Dispose( );
+                oggStream = null;
+
+                _isPlaying = false;
+                _isPaused = false;
+                _noPlayback = true;
             }
         }
 
         public void Stop( )
         {
-            if ( streamer == null )
+            if ( _noAudio )
                 return;
 
-            if ( _noAudio == true )
-                return;
+            oggStream?.Stop( );
 
-            oggStream.Stop( );
+            _isPlaying = false;
+            _isPaused = false;
         }
 
         public void Pause( )
         {
-            if ( streamer == null )
+            if ( _noAudio )
                 return;
 
-            if ( _noAudio == true )
-                return;
+            oggStream?.Pause( );
 
-            oggStream.Pause( );
+            _isPlaying = false;
+            _isPaused = true;
         }
 
         public void Resume( )
         {
-            if ( streamer == null )
+            if ( _noAudio )
                 return;
 
-            if ( _noAudio == true )
-                return;
+            oggStream?.Resume( );
 
-            oggStream.Resume( );
+            _isPlaying = true;
+            _isPaused = false;
         }
 
         public void Shutdown( )
         {
-            if ( streamer == null )
-                return;
+            oggStream?.Dispose( );
+            oggStream = null;
 
-            if ( _noAudio == true )
-                return;
-
-            //oggStream.Dispose();
-            streamer.Dispose( );
+            _isPlaying = false;
+            _isPaused = false;
         }
 
         public void Update( )
         {
-            if ( streamer == null )
+            if ( _noAudio || _noPlayback || oggStream == null )
                 return;
-
-            if ( _noAudio == true )
-                return;
-
-            if ( _noPlayback == true )
-                return;
-
-            /*if (waveOut.PlaybackState == PlaybackState.Paused)
-            {
-                _isPaused = true;
-            }
-            else if (waveOut.PlaybackState == PlaybackState.Playing)
-            {
-                _isPaused = false;
-            }
-
-            if (waveOut.PlaybackState == PlaybackState.Paused || waveOut.PlaybackState == PlaybackState.Stopped)
-            {
-                _isPlaying = false;
-            }
-            else if (waveOut.PlaybackState == PlaybackState.Playing)
-            {
-                _isPlaying = true;
-            }*/
 
             _Volume = BgmVolume;
             oggStream.Volume = _Volume;
+            oggStream.Update( );
+
+            _isPaused = oggStream.IsPaused;
+            _isPlaying = oggStream.IsPlaying;
         }
 
         public void ReloadDiskInfo( )

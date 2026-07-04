@@ -30,7 +30,7 @@ using SharpQuake.Renderer.Textures;
 
 namespace SharpQuake.Renderer
 {
-    public class BaseGraphics : IDisposable
+    public abstract class BaseGraphics : IDisposable
     {
         public BaseDevice Device
         {
@@ -59,6 +59,11 @@ namespace SharpQuake.Renderer
             //throw new NotImplementedException( );
         }
 
+        public virtual void DrawTexture2D( BaseTexture texture, Color? colour = null, Boolean hasAlpha = false )
+        {
+            DrawTexture2D( texture, 0, 0, texture.Desc.Width, texture.Desc.Height, colour, hasAlpha );
+        }
+
         public virtual void DrawTexture2D( BaseTexture texture, Int32 x, Int32 y, Color? colour = null, Boolean hasAlpha = false )
         {
             DrawTexture2D( texture, x, y, texture.Desc.Width, texture.Desc.Height, colour, hasAlpha );
@@ -85,10 +90,10 @@ namespace SharpQuake.Renderer
             DrawTexture2D( texture, sourceRect, new Rectangle( x, y, texture.Desc.Width, texture.Desc.Height ), colour, hasAlpha );
         }
 
-        public virtual void DrawTexture2D( BaseTexture texture, RectangleF sourceRect, Rectangle destRect, Color? colour = null, Boolean hasAlpha = false )
-        {
-            throw new NotImplementedException( );
-        }
+        public abstract void DrawTexture2D( BaseTexture texture, RectangleF sourceRect, Rectangle destRect, Color? colour = null, Boolean hasAlpha = false );
+
+
+        public abstract void DrawTexture2D( IRenderTexture texture );
 
         public virtual void DrawPicture( BasePicture picture, Int32 x, Int32 y, Color? colour = null, Boolean hasAlpha = false, Int32 scale = 1 )
         {

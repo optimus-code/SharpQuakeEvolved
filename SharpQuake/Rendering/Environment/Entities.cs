@@ -31,7 +31,6 @@ using SharpQuake.Framework.World;
 using SharpQuake.Game.Data.Models;
 using SharpQuake.Game.Rendering.Memory;
 using SharpQuake.Game.World;
-using SharpQuake.Logging;
 using SharpQuake.Networking.Client;
 using SharpQuake.Renderer.Models;
 using SharpQuake.Rendering.Cameras;

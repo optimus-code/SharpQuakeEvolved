@@ -26,7 +26,6 @@ using SharpQuake.Framework;
 using SharpQuake.Framework.Factories.IO.WAD;
 using SharpQuake.Networking.Client;
 using SharpQuake.Renderer.Textures;
-using SharpQuake.Rendering.UI.Elements;
 using SharpQuake.Sys;
 using System;
 

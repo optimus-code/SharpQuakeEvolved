@@ -28,8 +28,6 @@ using SharpQuake.Framework.Factories.IO;
 using SharpQuake.Framework.IO;
 using SharpQuake.Framework.Logging;
 using SharpQuake.Game.Client;
-using SharpQuake.Logging;
-using SharpQuake.Sys;
 
 // cl_input.c
 

@@ -1,15 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using SharpQuake.Framework;
 using SharpQuake.Framework.Mathematics;
 using SharpQuake.Renderer.Textures;
 
 namespace SharpQuake.Renderer.Models
 {
-	public class BaseAliasModel : BaseModel
+	public abstract class BaseAliasModel : BaseModel
 	{
 		public BaseAliasModelDesc AliasDesc
 		{

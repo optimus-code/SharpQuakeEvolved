@@ -43,7 +43,6 @@ using SharpQuake.Sys.Programs;
 using SharpQuake.Factories.Rendering;
 using SharpQuake.Sys.Handlers;
 using SharpQuake.Networking.Client;
-using static System.Windows.Forms.AxHost;
 
 namespace SharpQuake
 {

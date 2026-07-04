@@ -26,7 +26,6 @@ using System;
 using SharpQuake.Desktop;
 using SharpQuake.Factories.Rendering.UI;
 using SharpQuake.Framework;
-using SharpQuake.Sys;
 
 namespace SharpQuake.Rendering.UI
 {

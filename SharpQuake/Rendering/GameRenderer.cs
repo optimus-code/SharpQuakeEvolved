@@ -22,21 +22,11 @@
 /// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 /// </copyright>
 
-using SharpQuake.Desktop;
-using SharpQuake.Factories;
-using SharpQuake.Factories.Rendering;
-using SharpQuake.Factories.Rendering.UI;
 using SharpQuake.Framework;
-using SharpQuake.Framework.Factories.IO;
-using SharpQuake.Framework.Factories.IO.WAD;
 using SharpQuake.Framework.IO;
 using SharpQuake.Game.Client;
 using SharpQuake.Game.Rendering.Textures;
-using SharpQuake.Logging;
 using SharpQuake.Networking.Client;
-using SharpQuake.Rendering.Cameras;
-using SharpQuake.Rendering.UI.Elements;
-using SharpQuake.Sys;
 using System;
 
 namespace SharpQuake.Rendering

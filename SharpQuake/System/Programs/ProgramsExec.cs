@@ -27,7 +27,6 @@ using SharpQuake.Framework.Factories.IO;
 using SharpQuake.Framework.IO;
 using SharpQuake.Framework.Logging;
 using SharpQuake.Networking.Server;
-using SharpQuake.Sys.Handlers;
 using System;
 
 namespace SharpQuake.Sys.Programs

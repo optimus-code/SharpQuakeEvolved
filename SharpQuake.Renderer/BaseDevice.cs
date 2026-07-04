@@ -26,7 +26,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using SharpQuake.Framework;
 using SharpQuake.Framework.IO;
 using SharpQuake.Framework.Mathematics;
@@ -34,7 +33,7 @@ using SharpQuake.Renderer.Textures;
 
 namespace SharpQuake.Renderer
 {
-    public class BaseDevice : IDisposable
+    public abstract class BaseDevice : IDisposable
     {
         public BaseDeviceDesc Desc
         {
@@ -207,10 +206,7 @@ namespace SharpQuake.Renderer
             }
         }
 
-        public virtual void ResetMatrix( )
-        {
-            throw new NotImplementedException( );
-        }
+        public abstract void ResetMatrix( );
 
         public virtual void Dispose( )
         {
@@ -230,35 +226,20 @@ namespace SharpQuake.Renderer
                 Present( );
         }
 
-        protected virtual void Present( )
-        {
-            throw new NotImplementedException( );
-        }
+        protected abstract void Present( );
 
-        public virtual void Begin2DScene( )
-        {
-            throw new NotImplementedException( );
-        }
+        public abstract void Begin2DScene( );
 
-        public virtual void End2DScene( )
-        {
-            throw new NotImplementedException( );
-        }
-        
-        public virtual void Setup3DScene( System.Boolean cull, refdef_t renderDef, System.Boolean isEnvMap )
-        {
-            throw new NotImplementedException( );
-        }
+        public abstract void End2DScene( );
+
+        public abstract void Setup3DScene( System.Boolean cull, refdef_t renderDef, System.Boolean isEnvMap );
 
         public virtual void SetViewport( Rectangle rect )
         {
             SetViewport( rect.X, rect.Y, rect.Width, rect.Height );
         }
 
-        public virtual void SetViewport( Int32 x, Int32 y, Int32 width, Int32 height )
-        {
-            throw new NotImplementedException( );
-        }
+        public abstract void SetViewport( Int32 x, Int32 y, Int32 width, Int32 height );
 
         public virtual BaseTextureFilter GetTextureFilters( String name )
         {
@@ -268,10 +249,7 @@ namespace SharpQuake.Renderer
             return TextureFilters[name];
         }
 
-        public virtual void SetTextureFilters( String name )
-        {
-            throw new NotImplementedException( );
-        }
+        public abstract void SetTextureFilters( String name );
 
         public virtual BaseTextureBlendMode GetBlendMode( String name )
         {
@@ -281,69 +259,51 @@ namespace SharpQuake.Renderer
             return BlendModes[name];
         }
 
-        public virtual void SetBlendMode( String name )
-        {
-            throw new NotImplementedException( );
-        }
+        public abstract void SetBlendMode( String name );
 
-        public virtual void SetDepth( Single minimum, Single maximum )
-        {
-            throw new NotImplementedException( );
-        }
+        public abstract void SetDepth( Single minimum, Single maximum );
 
-        public virtual void SetZWrite( Boolean enable )
-        {
-            throw new NotImplementedException( );
-        }
+        public abstract void SetZWrite( Boolean enable );
 
-        public virtual void SetDrawBuffer( Boolean isFront )
-        {
-            throw new NotImplementedException( );
-        }
+        public abstract void SetDrawBuffer( Boolean isFront );
 
-        public virtual void Clear( Boolean zTrick, Single clear )
-        {
-            throw new NotImplementedException( );
-        }
+        public abstract void Clear( Boolean zTrick, Single clear );
 
         ///<summary>
         /// Needed probably for GL only
         ///</summary>
-        public virtual void Finish( )
-        {
-            throw new NotImplementedException( );
-        }
+        public abstract void Finish( );
 
-        public virtual void SelectTexture( MTexTarget target )
-        {
-            throw new NotImplementedException( );
-        }
+        public abstract void SelectTexture( MTexTarget target );
 
         /// <summary>
         /// GL_DisableMultitexture
         /// </summary>
-        public virtual void DisableMultitexture( )
-        {
-            throw new NotImplementedException( );
-        }
+        [Obsolete]
+        public abstract void DisableMultitexture( );
 
         /// <summary>
         /// GL_EnableMultitexture
         /// </summary>
-        public virtual void EnableMultitexture( )
-        {
-            throw new NotImplementedException( );
-        }
+        [Obsolete]
+        public abstract void EnableMultitexture( );
+
+        public abstract void Begin3DRenderTarget( );
+        public abstract void End3DRenderTarget( );
+        public abstract void RenderPostFX( );
 
         // VID_SetMode (int modenum, unsigned char *palette)
         // sets the mode; only used by the Quake engine for resetting to mode 0 (the
         // base mode) on memory allocation failures
-        public void SetMode( Int32 index, Byte[] palette )
+        public virtual void SetMode( Int32 index, Byte[] palette )
         {
             if ( index < 0 || index >= AvailableModes.Length )
                 Utilities.Error( "Bad video mode\n" );
 
             var mode = AvailableModes[index];
+
+            if ( Mode == mode )
+                return;
 
             // Disable screen for loading was here            
 
@@ -404,30 +364,15 @@ namespace SharpQuake.Renderer
             }
         }
 
-        protected virtual void ChangeMode( VideoMode mode )
-        {
-            throw new NotImplementedException( );
-        }
+        protected abstract void ChangeMode( VideoMode mode );
 
-        protected virtual void GetAvailableModes( )
-        {
-            throw new NotImplementedException( );
-        }
+        protected abstract void GetAvailableModes( );
 
-        public virtual void PushMatrix( )
-        {
-            throw new NotImplementedException( );
-        }
+        public abstract void PushMatrix( );
 
-        public virtual void PopMatrix( )
-        {
-            throw new NotImplementedException( );
-        }
+        public abstract void PopMatrix( );
 
-        public virtual void RotateForEntity( Vector3 origin, Vector3 angles )
-        {
-            throw new NotImplementedException( );
-        }
+        public abstract void RotateForEntity( Vector3 origin, Vector3 angles );
 
         private void ChooseMode( )
         {
@@ -514,9 +459,7 @@ namespace SharpQuake.Renderer
             }
         }
 
-		public virtual void BlendedRotateForEntity( Vector3 origin, Vector3 angles, Double realTime, ref Vector3 origin1, ref Vector3 origin2, ref Single translateStartTime, ref Vector3 angles1, ref Vector3 angles2, ref Single rotateStartTime )
-		{
-			throw new NotImplementedException( );
-		}
+        public abstract void BlendedRotateForEntity( Vector3 origin, Vector3 angles, Double realTime, ref Vector3 origin1,
+            ref Vector3 origin2, ref Single translateStartTime, ref Vector3 angles1, ref Vector3 angles2, ref Single rotateStartTime );
 	}
 }

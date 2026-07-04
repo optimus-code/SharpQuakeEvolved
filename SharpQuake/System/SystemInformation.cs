@@ -23,7 +23,6 @@
 /// </copyright>
 
 using Hardware.Info;
-using NVorbis.OpenTKSupport;
 using System;
 using System.Diagnostics;
 using System.Linq;

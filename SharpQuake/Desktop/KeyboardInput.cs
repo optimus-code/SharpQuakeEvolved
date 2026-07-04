@@ -27,14 +27,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using SharpQuake.Factories;
-using SharpQuake.Factories.Rendering.UI;
 using SharpQuake.Framework;
 using SharpQuake.Framework.Factories.IO;
 using SharpQuake.Framework.IO;
 using SharpQuake.Framework.IO.Input;
 using SharpQuake.Framework.Logging;
-using SharpQuake.Logging;
 
 // keys.h
 // keys.c

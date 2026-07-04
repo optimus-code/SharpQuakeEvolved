@@ -27,7 +27,6 @@ using SharpQuake.Framework.IO.BSP;
 using SharpQuake.Framework.Mathematics;
 using SharpQuake.Framework.World;
 using SharpQuake.Networking.Server;
-using SharpQuake.Sys.Programs;
 using System;
 
 // sv_move.c

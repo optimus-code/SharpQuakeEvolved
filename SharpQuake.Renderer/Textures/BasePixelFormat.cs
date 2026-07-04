@@ -26,7 +26,7 @@ using System;
 
 namespace SharpQuake.Renderer.Textures
 {
-    public class BasePixelFormat
+    public abstract class BasePixelFormat
     {
         public virtual String Name
         {

@@ -24,7 +24,6 @@
 
 using System;
 using System.Drawing;
-using SharpQuake.Factories;
 using SharpQuake.Framework;
 using SharpQuake.Framework.Factories.IO;
 using SharpQuake.Framework.Mathematics;

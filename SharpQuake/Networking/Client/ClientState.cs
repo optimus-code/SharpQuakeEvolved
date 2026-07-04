@@ -25,11 +25,7 @@
 using SharpQuake.Framework;
 using SharpQuake.Game.Client;
 using SharpQuake.Game.World;
-using SharpQuake.Rendering.Environment;
-using SharpQuake.Rendering.UI.Elements.HUD;
 using System;
-using System.Windows.Forms;
-using static System.Windows.Forms.AxHost;
 
 namespace SharpQuake.Networking.Client
 {

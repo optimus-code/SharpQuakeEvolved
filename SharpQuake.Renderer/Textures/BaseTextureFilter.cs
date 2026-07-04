@@ -26,7 +26,7 @@ using System;
 
 namespace SharpQuake.Renderer.Textures
 {
-    public class BaseTextureFilter
+    public abstract class BaseTextureFilter
     {
         public virtual String Name
         {
