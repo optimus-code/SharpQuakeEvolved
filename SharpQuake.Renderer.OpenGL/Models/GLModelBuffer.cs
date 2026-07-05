@@ -23,8 +23,10 @@
 /// </copyright>
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using OpenTK.Graphics.OpenGL;
+using OpenTK.Mathematics;
 using SharpQuake.Framework;
 using SharpQuake.Renderer.Models;
 using SharpQuake.Renderer.Textures;
@@ -201,10 +203,49 @@ namespace SharpQuake.Renderer.OpenGL.Models
             GL.ActiveTexture( TextureUnit.Texture0 );
         }
 
-        public override void DrawPoly( GLPoly poly )
-        {
-            var indexOffset = poly.FirstIndex * sizeof( uint ); // For UnsignedInt (4 bytes)
+        private const int MaxSurfaceDynamicLights = 4;
 
+        private void SetDynamicLightUniforms( List<dlight_t> dynamicLights )
+        {
+            var count = dynamicLights == null
+                ? 0
+                : Math.Min( dynamicLights.Count, MaxSurfaceDynamicLights );
+
+            Shader.SetInt32( "numDLights", count );
+
+            if ( count > 0 )
+            {
+                for ( var i = 0; i < MaxSurfaceDynamicLights; i++ )
+                {
+                    if ( i < count )
+                    {
+                        var light = dynamicLights[i];
+
+                        var lightView = Vector3.TransformPosition( new( light.origin.X, light.origin.Y, light.origin.Z ), _glDevice.View );
+                        Shader.SetVector3( $"dlightOrigin{i}", lightView );
+                        Shader.SetSingle( $"dlightRadius{i}", light.radius );
+                        Shader.SetSingle( $"dlightMinLight{i}", light.minlight );
+
+                        // Quake 1 dynamic lights are usually warm/orange unless you extended dlight_t.
+                        Shader.SetVector3( $"dlightColor{i}", new( 1.0f, 0.65f, 0.35f ) );
+                    }
+                    else
+                    {
+                        Shader.SetVector3( $"dlightOrigin{i}", Vector3.Zero );
+                        Shader.SetSingle( $"dlightRadius{i}", 0f );
+                        Shader.SetSingle( $"dlightMinLight{i}", 0f );
+                        Shader.SetVector3( $"dlightColor{i}", Vector3.Zero );
+                    }
+                }
+            }
+        }
+
+        public override void DrawPoly( GLPoly poly, List<dlight_t> dynamicLights )
+        {
+            SetDynamicLightUniforms( dynamicLights );
+
+            var indexOffset = poly.FirstIndex * sizeof( uint ); // For UnsignedInt (4 bytes)
+       
             GL.DrawElements(
                PrimitiveType.TriangleFan,
                poly.NumIndices,

@@ -131,7 +131,25 @@ namespace SharpQuake.Renderer
             set;
         }
 
-        public bool BlurPostFX
+        public float NoiseGrain
+        {
+            get;
+            set;
+        }
+
+        public float Bloom
+        {
+            get;
+            set;
+        }
+
+        public float ScreenBlur
+        {
+            get;
+            set;
+        }
+
+        public bool FadeScreen
         {
             get;
             set;

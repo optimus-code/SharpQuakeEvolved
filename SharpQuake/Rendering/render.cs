@@ -198,6 +198,9 @@ namespace SharpQuake
                 Cvars.Dynamic = _cvars.Add( "r_dynamic", true );
                 Cvars.NoVis = _cvars.Add( "r_novis", false );
 
+                Cvars.NoiseGrain = _cvars.Add( "r_noisegrain", 0.025f );
+                Cvars.Bloom = _cvars.Add( "r_bloom", 0.26f );
+
                 Cvars.glFinish = _cvars.Add( "gl_finish", false );
                 Cvars.glClear = _cvars.Add( "gl_clear", 0f );
                 Cvars.glCull = _cvars.Add( "gl_cull", true );
@@ -205,7 +208,7 @@ namespace SharpQuake
                 Cvars.glSmoothModels = _cvars.Add( "gl_smoothmodels", true );
                 Cvars.glAffineModels = _cvars.Add( "gl_affinemodels", false );
                 Cvars.glPolyBlend = _cvars.Add( "gl_polyblend", true );
-                Cvars.glFlashBlend = _cvars.Add( "gl_flashblend", true );
+                Cvars.glFlashBlend = _cvars.Add( "gl_flashblend", false );
                 Cvars.glPlayerMip = _cvars.Add( "gl_playermip", 0 );
                 Cvars.glNoColors = _cvars.Add( "gl_nocolors", false );
                 Cvars.glKeepTJunctions = _cvars.Add( "gl_keeptjunctions", false );

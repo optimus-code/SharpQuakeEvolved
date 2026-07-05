@@ -591,25 +591,6 @@ namespace SharpQuake.Renderer.OpenGL
             GL.Disable( EnableCap.Blend );
             GL.Enable( EnableCap.Texture2D );
             GL.Enable( EnableCap.AlphaTest );
-        }
-
-        public override void FadeScreen( )
-        {
-            GL.Enable( EnableCap.Blend );
-            GL.Disable( EnableCap.Texture2D );
-
-            GL.Color4( 0, 0, 0, 0.8f );
-            GL.Begin( PrimitiveType.Quads );
-
-            GL.Vertex2( 0f, 0f );
-            GL.Vertex2( Device.Desc.ActualWidth, 0f );
-            GL.Vertex2( ( Single ) Device.Desc.ActualWidth, ( Single ) Device.Desc.ActualHeight );
-            GL.Vertex2( 0f, Device.Desc.ActualHeight );
-
-            GL.End( );
-            GL.Color4( 1f, 1f, 1f, 1f );
-            GL.Enable( EnableCap.Texture2D );
-            GL.Disable( EnableCap.Blend );
-        }
+        }        
     }
 }

@@ -23,19 +23,19 @@
 /// </copyright>
 
 using Microsoft.Extensions.DependencyInjection;
-using SharpQuake.Factories.Rendering.UI;
-using SharpQuake.Factories.Rendering;
-using SharpQuake.Framework.Factories.IO.WAD;
-using SharpQuake.Framework.Factories.IO;
-using SharpQuake.Rendering;
 using SharpQuake.Desktop;
+using SharpQuake.Factories.Rendering;
+using SharpQuake.Factories.Rendering.UI;
+using SharpQuake.Framework.Factories.IO;
+using SharpQuake.Framework.Factories.IO.WAD;
+using SharpQuake.Logging;
+using SharpQuake.Networking;
+using SharpQuake.Networking.Client;
+using SharpQuake.Networking.Server;
+using SharpQuake.Rendering;
+using SharpQuake.Rendering.Cameras;
 using SharpQuake.Services;
 using SharpQuake.Sys.Programs;
-using SharpQuake.Rendering.Cameras;
-using SharpQuake.Networking;
-using SharpQuake.Networking.Server;
-using SharpQuake.Networking.Client;
-using SharpQuake.Logging;
 
 namespace SharpQuake.Extensions
 {
@@ -223,7 +223,8 @@ namespace SharpQuake.Extensions
                 .AddSingleton<ProgramsState>( )
                 .AddSingleton<ProgramsBuiltIn>( )
                 .AddSingleton<ProgramsEdict>( )
-                .AddSingleton<ProgramsExec>( );
+                .AddSingleton<ProgramsExec>( )
+                .AddSingleton<ProgramsCSharpEmitter>( );
 
             return services;
         }

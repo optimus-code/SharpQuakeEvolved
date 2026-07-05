@@ -207,7 +207,10 @@ namespace SharpQuake.Factories.Rendering.UI
 			var menu = Get( name );
 
 			if ( menu != null )
-				menu.Show( );
+			{
+				_screen.ShowBlur = true;
+                menu.Show( );
+			}
 		}
 
 		/// <summary>
@@ -217,7 +220,11 @@ namespace SharpQuake.Factories.Rendering.UI
 		public void SetActive( BaseMenu menu )
 		{
 			CurrentMenu = menu;
-			_video.Device.Desc.BlurPostFX = menu != null;
+
+			if ( CurrentMenu == null )
+			{
+                _screen.ShowBlur = false;
+            }
 		}
 
 		/// <summary>
@@ -247,7 +254,11 @@ namespace SharpQuake.Factories.Rendering.UI
 		public void Draw( )
 		{
 			if ( CurrentMenu == null || _keyboard.Destination != KeyDestination.key_menu )
-				return;
+            {
+                _drawer.UnfadeScreen( );
+                _screen.ShowBlur = false;
+                return;
+			}
 
 			if ( !_RecursiveDraw )
 			{
@@ -256,7 +267,8 @@ namespace SharpQuake.Factories.Rendering.UI
 				if ( OnDrawConsole?.Invoke() == true )
 				{
 					_sound.ExtraUpdate();
-				}
+					_drawer.UnfadeScreen( );
+                }
 				else
 					_drawer.FadeScreen();
 
@@ -265,7 +277,8 @@ namespace SharpQuake.Factories.Rendering.UI
 			else
 			{
 				_RecursiveDraw = false;
-			}
+                _drawer.UnfadeScreen( );
+            }
 
 			CurrentMenu?.Draw();
 

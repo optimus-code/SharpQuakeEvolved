@@ -11,6 +11,8 @@
     <None Remove="Resources\GLSL\PostFX.vert" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\GLSL\Blur.frag" />
+    <EmbeddedResource Include="Resources\GLSL\Blur.vert" />
     <EmbeddedResource Include="Resources\GLSL\PostFX.vert" />
     <EmbeddedResource Include="Resources\GLSL\PostFX.frag" />
     <EmbeddedResource Include="Resources\GLSL\DefaultSurface.frag" />

@@ -228,7 +228,7 @@ namespace SharpQuake.Renderer
 
         protected abstract void Present( );
 
-        public abstract void Begin2DScene( );
+        public abstract void Begin2DScene( Double time );
 
         public abstract void End2DScene( );
 
@@ -290,7 +290,7 @@ namespace SharpQuake.Renderer
 
         public abstract void Begin3DRenderTarget( );
         public abstract void End3DRenderTarget( );
-        public abstract void RenderPostFX( );
+        protected abstract void RenderPostFX( Double time );
 
         // VID_SetMode (int modenum, unsigned char *palette)
         // sets the mode; only used by the Quake engine for resetting to mode 0 (the

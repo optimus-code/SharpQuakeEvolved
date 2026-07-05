@@ -131,40 +131,51 @@ namespace SharpQuake.Rendering.UI.Elements.HUD
             //var boxWidth = _drawer.MeasureCharacter( 'T', isBigFont: true ) * 4 + ( padding * 2 );
             //var boxHeight = ( _drawer.CharacterAdvanceHeight( isBigFont: true ) + _drawer.CharacterAdvanceHeight( ) ) + ( padding * 2 );
 
-            var padding = 4;
-            var baseX = padding;
+            var margin = 16;
+            var padding = 8;
+            var baseX = margin;
 
             var isNewUI = Cvars.NewUI.Get<bool>( );
-            var elementHeight = _resources.MeasureNumHeight( 0 ) + 4;
-            var elementWidth = _resources.MeasureNum( 0, 0, 3 );
+            var elementHeight = _resources.MeasureNumHeight( 0 ) + margin;
 
             var baseY = ( _videoState.Data.height / _resources.Scale ) - ( ( elementHeight * 2 ) );
 
             var health = cl.stats[QStatsDef.STAT_HEALTH];
             var armour = cl.stats[QStatsDef.STAT_ARMOR];
             var ammo = cl.stats[QStatsDef.STAT_AMMO];
-            var numColor = health <= 25 ? 1 : 0;
-            var numHeight = _resources.MeasureNumHeight( numColor );
+            var healthNumColor = health <= 25 ? 1 : 0;
+            var armourNumColor = armour <= 25 ? 1 : 0;
+            var ammoNumColor = ammo <= 25 ? 1 : 0;
+            var numHeight = _resources.MeasureNumHeight( healthNumColor );
             var blockWidth = _resources.FaceInvisInvuln.Width;
 
             if ( armour > 0 )
             {
                 DrawArmour( baseX, baseY );
 
-                _resources.DrawNum( baseX + blockWidth, baseY, armour, 3, numColor );
+                baseX += blockWidth + padding;
+
+                _resources.DrawNum( baseX, baseY, armour, 3, armourNumColor, false );
             }
 
-            baseY += numHeight + padding;
+            baseX = margin;
+            baseY += numHeight + margin;
                 
             DrawFace( baseX, baseY );
 
-            _resources.DrawNum( baseX + blockWidth, baseY, health, 3, numColor );
+            baseX += blockWidth + padding;
 
-            baseX = ( _videoState.Data.width / _resources.Scale ) - elementWidth - blockWidth - padding;
+            _resources.DrawNum( baseX, baseY, health, 3, healthNumColor, false );
 
-            _resources.DrawNum( baseX - elementWidth, baseY, ammo, 3, numColor );
+            baseX = ( _videoState.Data.width / _resources.Scale ) - ( blockWidth + margin );
 
-            DrawAmmoIcon( baseX + elementWidth, baseY );
+            DrawAmmoIcon( baseX, baseY );
+
+            var elementWidth = _resources.MeasureNum( ammoNumColor, ammo, 3 );
+            baseX -= ( elementWidth + padding );
+
+            _resources.DrawNum( baseX, baseY, ammo, 3, ammoNumColor, false );
+
 
 
             //var padding = _drawer.MeasureCharacter( 'T', forceCharset: true );
@@ -232,9 +243,7 @@ namespace SharpQuake.Rendering.UI.Elements.HUD
             if ( _screen.Elements.Get<VisualConsole>( ElementFactory.CONSOLE )?.ConCurrent == vid.height )
                 return;		// console is full screen
 
-            var isDemo = _clientState.StaticData.demoplayback;
-
-            if ( isDemo && _menus.CurrentMenu != null )
+            if ( _menus.CurrentMenu != null )
                 return;
             
             if ( Cvars.NewUI?.Get<Boolean>() == true )

@@ -248,6 +248,11 @@ namespace SharpQuake
             _elements.SetDirty( ElementFactory.HUD );
         }
 
+        public void UnfadeScreen( )
+        {
+            _video.Device.Graphics.UnfadeScreen( );
+        }
+
         // Draw_Character
         //
         // Draws one 8*8 graphics character with 0 being transparent.

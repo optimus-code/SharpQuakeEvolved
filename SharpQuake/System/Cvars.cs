@@ -93,6 +93,8 @@ namespace SharpQuake.Sys
         public static ClientVariable Shadows;// = { "r_shadows", "0" };
         //public CVar _MirrorAlpha;// = { "r_mirroralpha", "1" };
         public static ClientVariable WaterAlpha;// = { "r_wateralpha", "1" };
+        public static ClientVariable NoiseGrain;// = { "r_noisegrain", "1" };
+        public static ClientVariable Bloom;
         public static ClientVariable Dynamic;// = { "r_dynamic", "1" };
         public static ClientVariable NoVis;// = { "r_novis", "0" };
         public static ClientVariable glFinish;// = { "gl_finish", "0" };

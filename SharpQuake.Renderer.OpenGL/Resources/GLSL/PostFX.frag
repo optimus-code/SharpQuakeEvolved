@@ -1,46 +1,88 @@
 #version 120
 
 uniform sampler2D tex;
-
-uniform int blur;
-uniform vec2 texelSize;
+uniform sampler2D blurTex;
 
 /*
-    Try values like:
-    1.0 = very subtle
-    2.0 = visible
-    4.0 = obvious
-    8.0 = very obvious
+    0.0 = no grain
+    0.5 = default grain opacity
+    1.0 = strong grain
 */
-uniform float blurRadius = 8.0;
+uniform float noiseGrain = 0.5;
+uniform float time = 0.0;
+
+/*
+    0.0 = no general screen blur
+    1.0 = fully blurred screen
+
+    This controls ONLY the general full-screen blur effect.
+    It does not control whether the blur texture was generated.
+*/
+uniform float screenBlurAmount = 0.0;
+uniform float fadeScreen = 0.0;
+
+/*
+    0.0 = no bloom
+    1.0+ = stronger bloom
+
+    This uses the blurred texture additively.
+*/
+uniform float bloomIntensity = 0.0;
+
+/*
+    0 = do not sample blurTex
+    1 = blurTex is available
+*/
+uniform int blurEnabled = 0;
+
+float random(vec2 p, float seed)
+{
+    return fract(sin(dot(p, vec2(12.9898, 78.233)) + seed * 37.719) * 43758.5453);
+}
+
+vec3 lerp(vec3 a, vec3 b, float t)
+{
+    return mix(a, b, t);
+}
 
 void main()
 {
     vec2 uv = gl_TexCoord[0].st;
 
-    if (blur == 0)
+    vec4 scene = texture2D(tex, uv);
+    vec3 color = scene.rgb;
+
+    float safeScreenBlurAmount = clamp(screenBlurAmount, 0.0, 1.0);
+    float safeBloomIntensity = max(bloomIntensity, 0.0);
+    float safeNoiseGrain = max(noiseGrain, 0.0);
+
+    if (blurEnabled != 0)
     {
-        gl_FragColor = texture2D(tex, uv);
-        return;
+        vec4 blurred = texture2D(blurTex, uv);
+
+        // Optional general full-screen blur.
+        if (safeScreenBlurAmount > 0.0)
+        {
+            color = mix(color, blurred.rgb, safeScreenBlurAmount);
+        }
+
+        // Optional bloom/glow contribution.
+        if (safeBloomIntensity > 0.0)
+        {
+            color += blurred.rgb * safeBloomIntensity;
+        }
     }
 
-    vec2 offset = texelSize * blurRadius;
+    if (safeNoiseGrain > 0.0)
+    {
+        float frame = floor(time * 24.0);
 
-    vec4 color = vec4(0.0);
+        float noise = random(gl_FragCoord.xy, frame);
 
-    color += texture2D(tex, uv + offset * vec2(-1.0, -1.0)) * 1.0;
-    color += texture2D(tex, uv + offset * vec2( 0.0, -1.0)) * 2.0;
-    color += texture2D(tex, uv + offset * vec2( 1.0, -1.0)) * 1.0;
+        float grain = noise - 0.5;
 
-    color += texture2D(tex, uv + offset * vec2(-1.0,  0.0)) * 2.0;
-    color += texture2D(tex, uv + offset * vec2( 0.0,  0.0)) * 4.0;
-    color += texture2D(tex, uv + offset * vec2( 1.0,  0.0)) * 2.0;
+        color += grain * safeNoiseGrain;
+    }
 
-    color += texture2D(tex, uv + offset * vec2(-1.0,  1.0)) * 1.0;
-    color += texture2D(tex, uv + offset * vec2( 0.0,  1.0)) * 2.0;
-    color += texture2D(tex, uv + offset * vec2( 1.0,  1.0)) * 1.0;
-
-    color /= 16.0;
-
-    gl_FragColor = color;
+    gl_FragColor = vec4(lerp(clamp(color, 0.0, 1.0), vec3(0, 0, 0), fadeScreen), scene.a);
 }

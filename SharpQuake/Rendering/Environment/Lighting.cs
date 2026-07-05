@@ -33,6 +33,7 @@ using SharpQuake.Renderer.OpenGL.Textures;
 using SharpQuake.Renderer.Textures;
 using SharpQuake.Sys;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace SharpQuake.Rendering.Environment
@@ -701,5 +702,5 @@ namespace SharpQuake.Rendering.Environment
 			// go down back side
 			return RecursiveLightPoint( n.children[side == 0 ? 1 : 0], ref mid, ref end );
 		}
-	}
+    }
 }

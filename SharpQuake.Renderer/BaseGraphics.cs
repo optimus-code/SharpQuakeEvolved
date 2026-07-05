@@ -244,7 +244,12 @@ namespace SharpQuake.Renderer
 
         public virtual void FadeScreen()
         {
-            throw new NotImplementedException( );
+            Device.Desc.FadeScreen = true;
+        }
+
+        public virtual void UnfadeScreen( )
+        {
+            Device.Desc.FadeScreen = false;
         }
     }
 }

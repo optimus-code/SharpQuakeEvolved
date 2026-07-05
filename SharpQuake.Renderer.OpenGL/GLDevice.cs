@@ -60,11 +60,7 @@ namespace SharpQuake.Renderer.OpenGL
         public TKMatrix4 WorldMatrix; // r_world_matrix
         public TKMatrix4 Projection;
 
-        private int _frameBuffer;
-        private IRenderTexture _renderTexture;
-        private int _depthBuffer;
-        private Shader _postProcessShaderProgram;
-        private bool _hasInitialisedRenderBuffers;
+        private GLPostProcessor _postProcessor;
 
         public GLDevice( TKGameWindow form )
             : this( form, Monitors.GetPrimaryMonitor( ) )
@@ -118,6 +114,19 @@ namespace SharpQuake.Renderer.OpenGL
             };
         }
 
+        private void EnsurePostFX( )
+        {
+            if ( _postProcessor == null )
+            {
+                _postProcessor = new GLPostProcessor(
+                    texture => Graphics.DrawTexture2D( texture ) );
+            }
+
+            _postProcessor.Initialise(
+                Desc.ActualWidth,
+                Desc.ActualHeight );
+        }
+
         /// <summary>
         /// GL_Init
         /// </summary>
@@ -143,68 +152,7 @@ namespace SharpQuake.Renderer.OpenGL
             GL.BlendFunc( BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha );
             GL.TexEnv( TextureEnvTarget.TextureEnv, TextureEnvParameter.TextureEnvMode, ( Int32 ) TextureEnvMode.Replace );
 
-            _hasInitialisedRenderBuffers = false;
-        }
-
-        private void ConfigureFrameBuffers( )
-        {
-            if ( _hasInitialisedRenderBuffers )
-                return;
-
-            DisposeFrameBuffers( );
-
-            _frameBuffer = GL.GenFramebuffer( );
-            GL.BindFramebuffer( FramebufferTarget.Framebuffer, _frameBuffer );
-
-            _renderTexture = new GLRenderTexture( GL.GenTexture( ), Desc.ActualWidth, Desc.ActualHeight );
-
-            GL.BindTexture( TextureTarget.Texture2D, _renderTexture.ID );
-
-            GL.TexImage2D( TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb, _renderTexture.Width, _renderTexture.Height, 0, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero );
-            GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, ( Int32 ) TextureMinFilter.Linear );
-            GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, ( Int32 ) TextureMagFilter.Linear );
-            GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureWrapS, ( Int32 ) TextureWrapMode.ClampToEdge );
-            GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureWrapT, ( Int32 ) TextureWrapMode.ClampToEdge );
-
-            GL.FramebufferTexture2D( FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, _renderTexture.ID, 0 );
-
-            _depthBuffer = GL.GenRenderbuffer( );
-            GL.BindRenderbuffer( RenderbufferTarget.Renderbuffer, _depthBuffer );
-            GL.RenderbufferStorage( RenderbufferTarget.Renderbuffer, RenderbufferStorage.DepthComponent24, _renderTexture.Width, _renderTexture.Height );
-            GL.FramebufferRenderbuffer( FramebufferTarget.Framebuffer, FramebufferAttachment.DepthAttachment, RenderbufferTarget.Renderbuffer, _depthBuffer );
-
-            FramebufferErrorCode status = GL.CheckFramebufferStatus( FramebufferTarget.Framebuffer );
-            if ( status != FramebufferErrorCode.FramebufferComplete )
-            {
-                Console.WriteLine( "Framebuffer status: " + status );
-                throw new Exception( "Framebuffer not complete: " + status );
-            }
-
-            GL.BindFramebuffer( FramebufferTarget.Framebuffer, 0 );
-
-            _postProcessShaderProgram = Shader.FromResource( "PostFX" );
-            _hasInitialisedRenderBuffers = true;
-        }
-
-        private void DisposeFrameBuffers( )
-        {
-            if ( _frameBuffer != 0 )
-            {
-                GL.DeleteFramebuffer( _frameBuffer );
-                _frameBuffer = 0;
-            }
-
-            if ( _renderTexture != null && _renderTexture.ID != 0 )
-            {
-                GL.DeleteTexture( _renderTexture.ID );
-                _renderTexture = null;
-            }
-
-            if ( _depthBuffer != 0 )
-            {
-                GL.DeleteRenderbuffer( _depthBuffer );
-                _depthBuffer = 0;
-            }
+            _postProcessor?.Invalidate( );
         }
 
         private void CheckGLError( String operation )
@@ -288,7 +236,7 @@ namespace SharpQuake.Renderer.OpenGL
         public override void SetMode( Int32 index, Byte[] palette )
         {
             base.SetMode( index, palette );
-            _hasInitialisedRenderBuffers = false;
+            _postProcessor?.Invalidate( );
         }
 
         protected override void ChangeMode( VideoMode mode )
@@ -316,7 +264,7 @@ namespace SharpQuake.Renderer.OpenGL
             Desc.ActualWidth = Form.FramebufferSize.X;
             Desc.ActualHeight = Form.FramebufferSize.Y;
 
-            _hasInitialisedRenderBuffers = false;
+            _postProcessor?.Invalidate( );
         }
 
         public override void BeginScene( )
@@ -394,11 +342,11 @@ namespace SharpQuake.Renderer.OpenGL
                 TKMatrix4.CreateRotationX( TKMathHelper.DegreesToRadians( -90f ) );
         }
 
-        public override void Begin2DScene( )
+        public override void Begin2DScene( Double time )
         {
             End3DRenderTarget( );
 
-            RenderPostFX( );
+            RenderPostFX( time );
 
             SetViewport( Desc.ViewRect );
 
@@ -423,45 +371,32 @@ namespace SharpQuake.Renderer.OpenGL
 
         public override void Begin3DRenderTarget( )
         {
-            GL.BindFramebuffer( FramebufferTarget.Framebuffer, _frameBuffer );
+            EnsurePostFX( );
+            _postProcessor.BeginCapture( );
         }
 
         public override void End3DRenderTarget( )
         {
-            GL.BindFramebuffer( FramebufferTarget.Framebuffer, 0 );
+            if ( _postProcessor != null )
+                _postProcessor.EndCapture( );
+            else
+                GL.BindFramebuffer( FramebufferTarget.Framebuffer, 0 );
         }
 
-        public override void RenderPostFX( )
+        protected override void RenderPostFX( Double time )
         {
-            if ( _renderTexture == null )
+            if ( _postProcessor == null )
                 return;
 
-            GL.BindFramebuffer( FramebufferTarget.Framebuffer, 0 );
+            _postProcessor.Render(
+                time,
+                Desc.NoiseGrain,
 
-            GL.Viewport( 0, 0, Desc.ActualWidth, Desc.ActualHeight );
-
-            GL.MatrixMode( MatrixMode.Projection );
-            GL.LoadIdentity( );
-            GL.Ortho( 0, Desc.ActualWidth, Desc.ActualHeight, 0, -1, 1 );
-
-            GL.MatrixMode( MatrixMode.Modelview );
-            GL.LoadIdentity( );
-
-            GL.Disable( EnableCap.DepthTest );
-            GL.Disable( EnableCap.CullFace );
-            GL.Disable( EnableCap.Blend );
-            GL.Disable( EnableCap.AlphaTest );
-
-            GL.ActiveTexture( TextureUnit.Texture0 );
-            GL.ClientActiveTexture( TextureUnit.Texture0 );
-
-            _postProcessShaderProgram.Use( );
-            _postProcessShaderProgram.SetInt32( "tex", 0 );
-            _postProcessShaderProgram.SetInt32( "blur", Desc.BlurPostFX ? 1 : 0 );
-
-            Graphics.DrawTexture2D( _renderTexture );
-
-            GL.UseProgram( 0 );
+                screenBlurAmount: Desc.ScreenBlur,
+                bloomIntensity: Desc.Bloom,
+                blurRadius: 20.0f,
+                blurIterations: 2,
+                fadeScreen: Desc.FadeScreen );
         }
 
         public override void Setup3DScene( Boolean cull, refdef_t renderDef, Boolean isEnvMap )
@@ -516,7 +451,7 @@ namespace SharpQuake.Renderer.OpenGL
             GL.Disable( EnableCap.AlphaTest );
             GL.Enable( EnableCap.DepthTest );
 
-            ConfigureFrameBuffers( );
+            EnsurePostFX( );
             Begin3DRenderTarget( );
         }
 

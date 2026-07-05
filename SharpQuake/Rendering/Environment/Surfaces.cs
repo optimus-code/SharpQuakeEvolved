@@ -32,6 +32,7 @@ using SharpQuake.Game.Rendering.Memory;
 using SharpQuake.Game.World;
 using SharpQuake.Networking.Client;
 using SharpQuake.Renderer.Textures;
+using SharpQuake.Rendering.Environment.Surface;
 using SharpQuake.Sys;
 
 // gl_rsurf.c
@@ -101,9 +102,14 @@ namespace SharpQuake.Rendering.Environment
 		private readonly Drawer _drawer;
 		private readonly IGameRenderer _gameRenderer;
 		private readonly RenderState _renderState;
-
-		public Surfaces( ClientState clientState, render renderer, Vid video, Drawer drawer, 
-			IGameRenderer gameRenderer, RenderState renderState )
+		private readonly WorldSurfaceCollector _surfaceCollector;
+        public Surfaces( 
+			ClientState clientState, 
+			render renderer, 
+			Vid video, 
+			Drawer drawer, 
+			IGameRenderer gameRenderer,
+			RenderState renderState )
         {
 			_clientState = clientState;
 			_renderer = renderer;
@@ -111,7 +117,8 @@ namespace SharpQuake.Rendering.Environment
 			_drawer = drawer;
 			_gameRenderer = gameRenderer;
 			_renderState = renderState;
-		}
+			_surfaceCollector = new( _renderer, _renderState );
+        }
 
 		/// <summary>
 		/// BuildSurfaceDisplayList
@@ -305,7 +312,7 @@ namespace SharpQuake.Rendering.Environment
 
                     for ( ; s != null; s = s.texturechain )
 					{
-                        world.DrawPoly( s, true, Time.Absolute, true, WarpDef.TURBSCALE, waterAlpha );
+                        world.DrawPoly( s, true, _clientState.Data.time, true, WarpDef.TURBSCALE, _clientState.DLights, _renderer.World.Lighting.FrameCount, waterAlpha );
                         //_gameRenderer.WarpableTextures.EmitWaterPolys( Time.Absolute, s );
 					}
 
@@ -335,8 +342,8 @@ namespace SharpQuake.Rendering.Environment
 
 			Array.Clear( _LightMapPolys, 0, _LightMapPolys.Length );
 
-			RecursiveWorldNode( ( ( BrushModelData ) _TempEnt.model ).Nodes[0], modelOrg );
-
+			_surfaceCollector.Collect( _TempEnt );
+			
 			DrawTextureChains( );
 
 			var m = ( ( BrushModelData ) _TempEnt.model );
@@ -405,7 +412,7 @@ namespace SharpQuake.Rendering.Environment
 
 			if ( ( fa.flags & ( Int32 ) Q1SurfaceFlags.Sky ) != 0 )
 			{   // warp texture, no lightmaps
-                _gameRenderer.WarpableTextures.EmitBothSkyLayers( Time.Absolute, _renderer.Origin, fa );
+                _gameRenderer.WarpableTextures.EmitBothSkyLayers( _clientState.Data.time, _renderer.Origin, fa );
                 return;
 			}
 
@@ -415,19 +422,19 @@ namespace SharpQuake.Rendering.Environment
 			if ( ( fa.flags & ( Int32 ) Q1SurfaceFlags.Turbulence ) != 0 )
 			{   // warp texture, no lightmaps
                 //_gameRenderer.WarpableTextures.EmitWaterPolys( Time.Absolute, fa );
-                model.DrawPoly( fa, true, Time.Absolute, true, WarpDef.TURBSCALE, 1f );
+                model.DrawPoly( fa, true, _clientState.Data.time, true, WarpDef.TURBSCALE, _clientState.DLights, _renderer.World.Lighting.FrameCount, 1f );
                 return;
 			}
 
 			if ( ( fa.flags & ( Int32 ) Q1SurfaceFlags.Underwater ) != 0 )
 			{
 				//_video.Device.Graphics.DrawWaterPoly( fa.polys, Time.Absolute );
-                model.DrawPoly( fa, false, Time.Absolute, false, 0 );
+                model.DrawPoly( fa, false, _clientState.Data.time, false, 0, _clientState.DLights, _renderer.World.Lighting.FrameCount );
             }
 			else			
 			{
 				//fa.NewPoly.LightMapTextureNum = fa.lightmaptexturenum;
-				model.DrawPoly( fa, false, Time.Absolute, false, 0 );
+				model.DrawPoly( fa, false, _clientState.Data.time, false, 0, _clientState.DLights, _renderer.World.Lighting.FrameCount );
             }
 			//else
 			//	_video.Device.Graphics.DrawPoly( fa.polys, t.scaleX, t.scaleY );
@@ -464,21 +471,7 @@ namespace SharpQuake.Rendering.Environment
 		//        return;
 		//    _IsMirror = true;
 		//    _MirrorPlane = s.plane;
-		//}
-
-		/// <summary>
-		/// R_RecursiveWorldNode
-		/// </summary>
-		private void RecursiveWorldNode( MemoryNodeBase node, Vector3 modelOrigin )
-		{
-			_renderer.World.Occlusion.RecursiveWorldNode( node, modelOrigin, _renderer.World.Lighting.FrameCount, _renderer.Frustum, ( surf ) => 
-			{
-				DrawSequentialPoly( surf );
-			}, ( efrags ) => 
-			{
-				_renderer.World.Entities.StoreEfrags( efrags );
-			} );
-		}
+		//}		
 
 		/// <summary>
 		/// R_DrawSequentialPoly

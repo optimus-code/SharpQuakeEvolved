@@ -537,6 +537,8 @@ namespace SharpQuake.Sys
             EngineThink = Get<EngineThink>( );
             Network = Get<Network>( );
 
+            Get<ProgramsCSharpEmitter>( );
+
             _ = Get<IGameConsoleLogger>( );
 
             Window.Configure( Logger, Keyboard, Mouse );

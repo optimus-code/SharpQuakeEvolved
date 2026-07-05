@@ -23,6 +23,7 @@
 /// </copyright>
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using SharpQuake.Framework;
 using SharpQuake.Framework.Mathematics;
@@ -69,7 +70,7 @@ namespace SharpQuake.Renderer.Models
         {
         }
 
-        public virtual void DrawPoly( GLPoly poly )
+        public virtual void DrawPoly( GLPoly poly, List<dlight_t> dynamicLights )
         {
         }
 

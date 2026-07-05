@@ -23,6 +23,7 @@
 /// </copyright>
 
 using System;
+using System.Collections.Generic;
 using SharpQuake.Framework;
 
 namespace SharpQuake.Game.Rendering.Memory
@@ -63,6 +64,8 @@ namespace SharpQuake.Game.Rendering.Memory
         // now samples = loadmodel->lightdata;
 
         public GLPoly NewPoly;
+
+        public List<dlight_t> DynamicLights;
 
         public MemorySurface( )
         {

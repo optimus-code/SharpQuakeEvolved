@@ -418,7 +418,16 @@ namespace SharpQuake.Rendering.UI
 
             for ( Int32 i = 0; i < str.Length; i++ )
             {
-                x += 24;
+                var frame = 0;
+
+                if ( str[i] == '-' )
+                    frame = STAT_MINUS;
+                else
+                    frame = str[i] - '0';
+
+                var pic = Numbers[color, frame];
+
+                x += pic.Width;
             }
 
             return includeScale ? x * HudScale : x;
@@ -433,13 +442,13 @@ namespace SharpQuake.Rendering.UI
         }
 
         // Sbar_DrawNum
-        public void DrawNum( Int32 x, Int32 y, Int32 num, Int32 digits, Int32 color )
+        public void DrawNum( Int32 x, Int32 y, Int32 num, Int32 digits, Int32 color, bool pad = true )
         {
             var str = num.ToString( );// int l = Sbar_itoa(num, str);
 
             if ( str.Length > digits )
                 str = str.Remove( str.Length - digits );
-            if ( str.Length < digits )
+            if ( str.Length < digits && pad )
                 x += ( digits - str.Length ) * 24;
 
             for ( Int32 i = 0, frame; i < str.Length; i++ )

@@ -87,12 +87,14 @@ namespace SharpQuake
         private readonly Scr _screen;
         private readonly MemoryHandler _memoryHandler;
         private readonly ClientState _clientState;
+        private readonly ProgramsCSharpEmitter _progsCSharpEmitter;
 
         public Server( IConsoleLogger logger, ClientVariableFactory cvars, CommandFactory commands,
             ModelFactory models, ICache cache, IKeyboardInput keyboard, snd sound, Network network, ServerState state,
             ProgramsState programsState, ProgramsExec programsExec, ProgramsEdict programsEdict,
             ServerUser serverUser, ServerPhysics serverPhysics, ServerWorld serverWorld, Scr screen, 
-            MemoryHandler memoryHandler, ClientState clientState )
+            MemoryHandler memoryHandler, ClientState clientState,
+            ProgramsCSharpEmitter progsCSharpEmitter )
         {
             _logger = logger;
             _cache = cache;
@@ -112,6 +114,7 @@ namespace SharpQuake
             _screen = screen;
             _memoryHandler = memoryHandler;
             _clientState = clientState;
+            _progsCSharpEmitter = progsCSharpEmitter;
         }
 
         // SV_Init
@@ -672,6 +675,7 @@ namespace SharpQuake
 
             // load progs to get entity field count
             _programsState.Load( );
+            _progsCSharpEmitter.WriteToGameRoot( );
 
             // allocate server memory
             _state.Data.max_edicts = QDef.MAX_EDICTS;

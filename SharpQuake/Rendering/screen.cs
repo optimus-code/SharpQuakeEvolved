@@ -39,6 +39,7 @@ using SharpQuake.Renderer;
 using SharpQuake.Rendering;
 using SharpQuake.Rendering.UI;
 using SharpQuake.Rendering.UI.Elements;
+using SharpQuake.Rendering.UI.Elements.HUD;
 using SharpQuake.Sys;
 
 // screen.h
@@ -129,6 +130,12 @@ namespace SharpQuake
         {
             get;
             private set;
+        }
+
+        public bool ShowBlur
+        {
+            get;
+            set;
         }
 
         private readonly IConsoleLogger _logger;
@@ -290,7 +297,11 @@ namespace SharpQuake
 
                 _renderState.OnRender?.Invoke( );
 
-                _video.Device.Begin2DScene( );
+                _video.Device.Desc.NoiseGrain = Cvars.NoiseGrain.Get<float>( );
+                _video.Device.Desc.Bloom = Cvars.Bloom.Get<float>( );
+                _video.Device.Desc.ScreenBlur = ShowBlur ? 1f : 0f;
+
+                _video.Device.Begin2DScene( Time.Absolute );
 
 
                 //Set2D();

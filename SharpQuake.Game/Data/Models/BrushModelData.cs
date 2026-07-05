@@ -303,7 +303,11 @@ namespace SharpQuake.Game.Data.Models
 
         private readonly BaseDevice _device;
 
-        public BrushModelData( BaseDevice device, Single subdivideSize, ModelTexture noTexture, Boolean isWorld ) : base( noTexture )
+        public BrushModelData(
+            BaseDevice device,
+            Single subdivideSize, 
+            ModelTexture noTexture,
+            Boolean isWorld ) : base( noTexture )
         {
             _device = device;
 
@@ -775,7 +779,54 @@ namespace SharpQuake.Game.Data.Models
 
         //}
 
-        public void DrawPoly( MemorySurface surf, bool noLightmap, Double time, bool waveDistort, Double waveScale, float opacity = 1f )
+        const int MaxSurfaceDLights = 4;
+
+        private int BuildDynamicLightList(
+            MemorySurface surf,
+            Double time,
+            dlight_t[] allLights,
+            int frameCount )
+        {
+            if ( surf.DynamicLights == null )
+            {
+                surf.DynamicLights = new( );
+            }
+            else
+            {
+                surf.DynamicLights.Clear( );
+            }
+
+            if ( surf.dlightframe != frameCount )
+                return 0;
+
+            for ( int i = 0; i < ClientDef.MAX_DLIGHTS; i++ )
+            {
+                if ( ( surf.dlightbits & ( 1 << i ) ) == 0 )
+                    continue;
+
+                var light = allLights[i];
+
+                if ( light.die < time || light.radius <= 0 )
+                    continue;
+
+                surf.DynamicLights.Add( light );
+
+                if ( surf.DynamicLights.Count == MaxSurfaceDLights )
+                    break;
+            }
+
+            return surf.DynamicLights.Count;
+        }
+
+        public void DrawPoly(
+            MemorySurface surf, 
+            bool noLightmap, 
+            Double time, 
+            bool waveDistort, 
+            Double waveScale,
+            dlight_t[] allLights,
+            int frameCount,
+            float opacity = 1f )
         {
            // if ( !IsWorld )
            //     return;
@@ -785,11 +836,13 @@ namespace SharpQuake.Game.Data.Models
             if ( _modelBuffers == null )
                 return;
 
+            BuildDynamicLightList( surf, time, allLights, frameCount );
+
             //_modelBuffers?.Draw( );
             _modelBuffers.Begin( );
 
             _modelBuffers.BeginTexture( ( BaseTexture ) p.Texture, lmTexture, time, noLightmap, waveDistort, waveScale, opacity );
-            _modelBuffers.DrawPoly( p );
+            _modelBuffers.DrawPoly( p, surf.DynamicLights );
 
             //_modelBuffers.Draw( );
             _modelBuffers.End( );
