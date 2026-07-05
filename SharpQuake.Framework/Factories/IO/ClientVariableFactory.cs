@@ -101,6 +101,92 @@ namespace SharpQuake.Framework.Factories.IO
             stream.Write( buf, 0, buf.Length );
         }
 
+        /// <summary>
+        /// Cvar_ReadVariables
+        /// Reads lines containing: variable "value"
+        /// and applies them to existing archived variables.
+        /// </summary>
+        public void ReadVariables( Stream stream )
+        {
+            using var reader = new StreamReader(
+                stream,
+                Encoding.ASCII,
+                detectEncodingFromByteOrderMarks: false,
+                bufferSize: 4096,
+                leaveOpen: true );
+
+            string line;
+
+            while ( ( line = reader.ReadLine( ) ) != null )
+            {
+                line = line.Trim( );
+
+                if ( line.Length == 0 )
+                    continue;
+
+                if ( line.StartsWith( "//" ) || line.StartsWith( "#" ) || line.StartsWith( "bind" ) )
+                    continue;
+
+                if ( !TryReadVariableLine( line, out var name, out var value ) )
+                    continue;
+
+                var list = UniqueKeys
+                    ? DictionaryItems.Select( i => i.Value )
+                    : ListItems.Select( i => i.Value );
+
+                var cvar = list.FirstOrDefault( c =>
+                    String.Equals( c.Name, name, StringComparison.OrdinalIgnoreCase ) );
+
+                if ( cvar == null )
+                    continue;
+
+                if ( !cvar.IsArchive )
+                    continue;
+
+                if ( cvar.ValueType == typeof( Boolean ) )
+                {
+                    cvar.Set( value == "1" || value.Equals( "true", StringComparison.OrdinalIgnoreCase ) );
+                }
+                else if ( cvar.ValueType == typeof( Int32 ) )
+                {
+                    cvar.Set( Int32.Parse( value ) );
+                }
+                else
+                {
+                    cvar.Set( value );
+                }
+            }
+        }
+
+        private static bool TryReadVariableLine( string line, out string name, out string value )
+        {
+            name = null;
+            value = null;
+
+            var firstSpace = line.IndexOfAny( new[] { ' ', '\t' } );
+
+            if ( firstSpace <= 0 )
+                return false;
+
+            name = line.Substring( 0, firstSpace ).Trim( );
+
+            var rest = line.Substring( firstSpace + 1 ).Trim( );
+
+            if ( rest.Length < 2 )
+                return false;
+
+            if ( rest[0] == '"' && rest[rest.Length - 1] == '"' )
+            {
+                value = rest.Substring( 1, rest.Length - 2 );
+            }
+            else
+            {
+                value = rest;
+            }
+
+            return name.Length > 0;
+        }
+
         // Cvar_Command()
         // Handles variable inspection and changing from the console
         public Boolean HandleCommand( CommandMessage msg )

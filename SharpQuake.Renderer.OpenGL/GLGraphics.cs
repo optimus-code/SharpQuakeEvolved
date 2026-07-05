@@ -75,7 +75,10 @@ namespace SharpQuake.Renderer.OpenGL
                 GL.Disable( EnableCap.AlphaTest );
                 GL.Enable( EnableCap.Blend );
             }
+
+            GL.ActiveTexture( TextureUnit.Texture0 );
             GL.Enable( EnableCap.Texture2D );
+
             texture.Bind( );
 
             Device.SetBlendMode( "GL_MODULATE" ); // Added because when 3d rendering occurs something forces the modulate state to go preventing color
@@ -120,6 +123,7 @@ namespace SharpQuake.Renderer.OpenGL
 
         public override void DrawTexture2D( IRenderTexture texture )
         {
+            GL.ActiveTexture( TextureUnit.Texture0 );
             GL.Enable( EnableCap.Texture2D );
 
             GL.BindTexture( TextureTarget.Texture2D, texture.ID );

@@ -382,6 +382,39 @@ namespace SharpQuake.Sys
         }
 
         /// <summary>
+        /// Host_ReadConfiguration
+        /// Reads key bindings and archived cvars to config.cfg
+        /// </summary>
+        private void ReadConfiguration( )
+        {            
+            var path = Path.Combine( FileSystem.GameDir, "config.cfg" );
+
+            using ( var fs = FileSystem.OpenRead( path ) )
+            {
+                if ( fs != null )
+                {
+                    byte[] data;
+
+                    using ( var ms = new MemoryStream( ) )
+                    {
+                        fs.CopyTo( ms );
+                        data = ms.ToArray( );
+                    }
+
+                    using ( var bindingsStream = new MemoryStream( data ) )
+                    {
+                        Keyboard.ReadBindings( bindingsStream );
+                    }
+
+                    using ( var variablesStream = new MemoryStream( data ) )
+                    {
+                        CVars.ReadVariables( variablesStream );
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Dump an exception to the error log
         /// </summary>
         /// <param name="ex"></param>
@@ -806,7 +839,14 @@ namespace SharpQuake.Sys
 
                 // on non win32, mouse comes before video for security reasons
                 Mouse.Initialise( );
-                Get<Vid>( ).Initialise( gameRenderer.BasePal );
+
+                var vid = Get<Vid>( );
+
+                vid.InitialiseClientVariables( );
+
+                ReadConfiguration( );
+
+                vid.Initialise( gameRenderer.BasePal );
                 Get<Drawer>( ).Initialise( );
                 Screen.Initialise( );
                 gameLogger.InitialiseBackground( );

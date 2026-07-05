@@ -130,5 +130,11 @@ namespace SharpQuake.Renderer
             get;
             set;
         }
+
+        public bool BlurPostFX
+        {
+            get;
+            set;
+        }
     }
 }

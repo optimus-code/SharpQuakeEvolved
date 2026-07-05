@@ -1,6 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Resources\GLSL\DefaultSurface.frag" />
@@ -22,8 +24,5 @@
     <PackageReference Include="OpenTK" Version="4.9.4" />
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
     <PackageReference Include="System.Drawing.Common" Version="11.0.0-preview.5.26302.115" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Properties\" />
   </ItemGroup>
 </Project>

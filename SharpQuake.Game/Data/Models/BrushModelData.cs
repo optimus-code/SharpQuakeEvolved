@@ -421,9 +421,7 @@ namespace SharpQuake.Game.Data.Models
             MarkSurfaces = brushSrc.MarkSurfaces;
 
             for ( var i = 0; i < brushSrc.Hulls.Length; i++ )
-            {
                 Hulls[i].CopyFrom( brushSrc.Hulls[i] );
-            }
 
             NumTextures = brushSrc.NumTextures;
             Textures = brushSrc.Textures;
@@ -431,6 +429,14 @@ namespace SharpQuake.Game.Data.Models
             VisData = brushSrc.VisData;
             LightData = brushSrc.LightData;
             Entities = brushSrc.Entities;
+
+            // Important: copied inline brush models need the render data too.
+            VertexBuffer = brushSrc.VertexBuffer;
+            IndexBuffer = brushSrc.IndexBuffer;
+
+            _modelBuffers = brushSrc._modelBuffers;
+            lmTexture = brushSrc.lmTexture;
+            Polys = brushSrc.Polys;
         }
 
         public void Load( String name, Byte[] buffer, Action<ModelTexture> onCheckInitSkyTexture, Func<String, WadLumpBuffer> onCheckForTexture )
@@ -645,8 +651,8 @@ namespace SharpQuake.Game.Data.Models
 
         private void BuildSurfaces2( )
         {
-            if ( !IsWorld )
-                return;
+            //if ( !IsWorld )
+            //    return;
 
             Polys = new List<GLPoly>( );
 
@@ -681,9 +687,13 @@ namespace SharpQuake.Game.Data.Models
 
                     verts.Add( new BufferVertex
                     {
-                        Position = new Vector3( vert1[0], vert1[1], vert1[2] ),
-                        UV = texCoord,
-                        UV2 = texCoord2,
+                        X = vert1[0],
+                        Y = vert1[1],
+                        Z = vert1[2],
+                        U = texCoord.X,
+                        V = texCoord.Y,
+                        U2 = texCoord2.X,
+                        V2 = texCoord2.Y,
                     } );
                 }
 
@@ -731,8 +741,8 @@ namespace SharpQuake.Game.Data.Models
             //        indices.Add( ti + 0 );
             //    }
 
-            if ( !IsWorld )
-                return;
+           // if ( !IsWorld )
+           //     return;
             BuildSurfaces2( );
 
             _modelBuffers = BaseModelBuffer.New( _device, VertexBuffer, IndexBuffer );
@@ -740,26 +750,32 @@ namespace SharpQuake.Game.Data.Models
 
         private List<GLPoly> Polys;
 
-        public void Draw( BaseTexture lightmapTexture, Double time, bool noLightmap, bool waveDistort, Double waveScale )
-        {
-            if ( !IsWorld )
-                return;
+        //[Obsolete("Not actually used or referenced")]
+        //public void Draw( BaseTexture lightmapTexture, Double time, bool noLightmap, bool waveDistort, Double waveScale )
+        //{
+        //    if ( !IsWorld )
+        //        return;
 
-            //_modelBuffers?.Draw( );
-            _modelBuffers.Begin( );
+        //    //_modelBuffers?.Draw( );
+        //    _modelBuffers.Begin( );
 
-            foreach ( var p in Polys )
-            {
-                if ( p == null )
-                    continue;
-                _modelBuffers.BeginTexture( ( BaseTexture ) p.Texture, lightmapTexture, time, noLightmap, waveDistort, waveScale );
-                _modelBuffers.DrawPoly( p );
-            }
-            //_modelBuffers.Draw( );
-            _modelBuffers.End( );
+        //    foreach ( var p in Polys )
+        //    {
+        //        if ( p == null )
+        //            continue;
 
-        }
-        public void DrawPoly( MemorySurface surf, bool noLightmap, Double time, bool waveDistort, Double waveScale )
+        //        var isTransparent = ( p.flags & ( ( Int32 ) Q1SurfaceFlags.Turbulence | ( Int32 ) Q1SurfaceFlags.Underwater ) ) != 0;
+
+
+        //        _modelBuffers.BeginTexture( ( BaseTexture ) p.Texture, lightmapTexture, time, noLightmap, waveDistort, waveScale, isTransparent );
+        //        _modelBuffers.DrawPoly( p );
+        //    }
+        //    //_modelBuffers.Draw( );
+        //    _modelBuffers.End( );
+
+        //}
+
+        public void DrawPoly( MemorySurface surf, bool noLightmap, Double time, bool waveDistort, Double waveScale, float opacity = 1f )
         {
            // if ( !IsWorld )
            //     return;
@@ -772,7 +788,7 @@ namespace SharpQuake.Game.Data.Models
             //_modelBuffers?.Draw( );
             _modelBuffers.Begin( );
 
-            _modelBuffers.BeginTexture( ( BaseTexture ) p.Texture, lmTexture, time, noLightmap, waveDistort, waveScale );
+            _modelBuffers.BeginTexture( ( BaseTexture ) p.Texture, lmTexture, time, noLightmap, waveDistort, waveScale, opacity );
             _modelBuffers.DrawPoly( p );
 
             //_modelBuffers.Draw( );
@@ -1060,8 +1076,11 @@ namespace SharpQuake.Game.Data.Models
                 var vert = poly.verts[i];
                 vertexBuffer.Add( new BufferVertex
                 {
-                    Position = new Vector3( vert[0], vert[1], vert[2] ),
-                    UV = new Vector2( vert[5], vert[6] )
+                    X = vert[0], 
+                    Y = vert[1],
+                    Z = vert[2],
+                    U = vert[5],
+                    V = vert[6]
                 } );
             }
         }

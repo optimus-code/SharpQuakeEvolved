@@ -62,29 +62,29 @@ namespace SharpQuake.Renderer
             Texture = BaseTexture.FromBuffer( Device, Name, buffer, 128, 128, false, true, filter: "GL_NEAREST" );
         }
 
-        public virtual Int32 Measure( UInt32 character )
+        public virtual Int32 Measure( UInt32 character, int scale = 4 )
         {
-            return 8 * 4;
+            return 8 * scale;
         }
 
-        public virtual Int32 MeasureHeight( UInt32 character )
+        public virtual Int32 MeasureHeight( UInt32 character, int scale = 4 )
         {
-            return 8 * 4;
+            return 8 * scale;
         }
 
-        public virtual Int32 Measure( String str )
+        public virtual Int32 Measure( String str, int scale = 4 )
         {
-            return str.Length * ( 8 * 4 );
+            return str.Length * ( 8 * scale );
         }
 
         // Draw_String
-        public virtual void Draw( Int32 x, Int32 y, String str, Color? color = null )
+        public virtual void Draw( Int32 x, Int32 y, String str, Color? color = null, int scale = 4 )
         {
             var xAdvance = x;
             for ( var i = 0; i < str.Length; i++ )
             {
-                DrawCharacter( xAdvance, y, str[i], color );
-                xAdvance += CharacterAdvance( ) + Measure( str[i] );
+                DrawCharacter( xAdvance, y, str[i], color, scale );
+                xAdvance += CharacterAdvance( ) + Measure( str[i], scale );
             }
         }
 
@@ -94,7 +94,7 @@ namespace SharpQuake.Renderer
         // It can be clipped to the top of the screen to allow the console to be
         // smoothly scrolled off.
         // Vertex color modification has no effect currently
-        public virtual void DrawCharacter( Int32 x, Int32 y, Int32 num, Color? colour = null )
+        public virtual void DrawCharacter( Int32 x, Int32 y, Int32 num, Color? colour = null, int scale = 4 )
         {
             if ( num == 32 )
                 return;		// space
@@ -111,11 +111,11 @@ namespace SharpQuake.Renderer
             var frow = row * 0.0625f;
             var fcol = col * 0.0625f;
 
-            var cW = Measure( ( UInt32 ) num );
-            var cH = MeasureHeight( ( UInt32 ) num );
+            var cW = Measure( ( UInt32 ) num, scale );
+            var cH = MeasureHeight( ( UInt32 ) num, scale );
 
             Device.Graphics.DrawTexture2D( Texture,
-                   new RectangleF( fcol, frow, size, size ), new Rectangle( x, y, cW, cH ), colour );
+                   new RectangleF( fcol, frow, size, size ), new Rectangle( x * scale, y * scale, cW * scale, cH * scale ), colour );
         }
 
         public virtual void DrawCharacterStretched( Int32 x, Int32 y, Int32 num, Int32 width, Color? colour = null )

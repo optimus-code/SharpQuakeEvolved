@@ -22,13 +22,14 @@
 /// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 /// </copyright>
 
-using System;
+using OpenTK.Compute.OpenCL;
 using SharpQuake.Factories.Rendering.UI;
 using SharpQuake.Framework;
-using SharpQuake.Framework.IO;
-using SharpQuake.Sys;
 using SharpQuake.Framework.Factories.IO;
+using SharpQuake.Framework.IO;
 using SharpQuake.Networking.Client;
+using SharpQuake.Sys;
+using System;
 
 // sbar.h
 
@@ -65,15 +66,17 @@ namespace SharpQuake.Rendering.UI.Elements.HUD
         private readonly Vid _video;
         private readonly Drawer _drawer;
         private readonly CommandFactory _commands;
+        private readonly MenuFactory _menus;
         private readonly ClientState _clientState;
         private readonly VideoState _videoState;
 
         public Hud( Scr screen, Vid video, Drawer drawer, CommandFactory commands,
-            ClientState clientState, VideoState videoState )
+            MenuFactory menus, ClientState clientState, VideoState videoState )
         {
             _screen = screen;
             _video = video;
             _commands = commands;
+            _menus = menus;
             _drawer = drawer;
             _clientState = clientState;
             _videoState = videoState;
@@ -128,21 +131,57 @@ namespace SharpQuake.Rendering.UI.Elements.HUD
             //var boxWidth = _drawer.MeasureCharacter( 'T', isBigFont: true ) * 4 + ( padding * 2 );
             //var boxHeight = ( _drawer.CharacterAdvanceHeight( isBigFont: true ) + _drawer.CharacterAdvanceHeight( ) ) + ( padding * 2 );
 
-            var padding = _drawer.MeasureCharacter( 'T', forceCharset: true );
-            var boxWidth = padding * 7;
-            var boxHeight = padding * 4;
+            var padding = 4;
+            var baseX = padding;
 
-            DrawStat( padding, sH - boxHeight - padding, "Health", cl.stats[QStatsDef.STAT_HEALTH].ToString( ) );
+            var isNewUI = Cvars.NewUI.Get<bool>( );
+            var elementHeight = _resources.MeasureNumHeight( 0 ) + 4;
+            var elementWidth = _resources.MeasureNum( 0, 0, 3 );
 
-            if ( cl.stats[QStatsDef.STAT_ARMOR] > 0 )
+            var baseY = ( _videoState.Data.height / _resources.Scale ) - ( ( elementHeight * 2 ) );
+
+            var health = cl.stats[QStatsDef.STAT_HEALTH];
+            var armour = cl.stats[QStatsDef.STAT_ARMOR];
+            var ammo = cl.stats[QStatsDef.STAT_AMMO];
+            var numColor = health <= 25 ? 1 : 0;
+            var numHeight = _resources.MeasureNumHeight( numColor );
+            var blockWidth = _resources.FaceInvisInvuln.Width;
+
+            if ( armour > 0 )
             {
-                DrawStat( padding + ( ( boxWidth + padding ) * 1 ), sH - boxHeight - padding, "Armor", cl.stats[QStatsDef.STAT_ARMOR].ToString( ) );
-                DrawStat( padding + ( ( boxWidth + padding ) * 2 ), sH - boxHeight - padding, "Ammo", cl.stats[QStatsDef.STAT_AMMO].ToString( ) );
+                DrawArmour( baseX, baseY );
+
+                _resources.DrawNum( baseX + blockWidth, baseY, armour, 3, numColor );
             }
-            else
-            {
-                DrawStat( padding + ( ( boxWidth + padding ) * 1 ), sH - boxHeight - padding, "Ammo", cl.stats[QStatsDef.STAT_AMMO].ToString( ) );
-            }
+
+            baseY += numHeight + padding;
+                
+            DrawFace( baseX, baseY );
+
+            _resources.DrawNum( baseX + blockWidth, baseY, health, 3, numColor );
+
+            baseX = ( _videoState.Data.width / _resources.Scale ) - elementWidth - blockWidth - padding;
+
+            _resources.DrawNum( baseX - elementWidth, baseY, ammo, 3, numColor );
+
+            DrawAmmoIcon( baseX + elementWidth, baseY );
+
+
+            //var padding = _drawer.MeasureCharacter( 'T', forceCharset: true );
+            //var boxWidth = padding * 7;
+            //var boxHeight = padding * 4;
+
+            //DrawStat( padding, sH - boxHeight - padding, "Health", cl.stats[QStatsDef.STAT_HEALTH].ToString( ) );
+
+            //if ( cl.stats[QStatsDef.STAT_ARMOR] > 0 )
+            //{
+            //    DrawStat( padding + ( ( boxWidth + padding ) * 1 ), sH - boxHeight - padding, "Armor", cl.stats[QStatsDef.STAT_ARMOR].ToString( ) );
+            //    DrawStat( padding + ( ( boxWidth + padding ) * 2 ), sH - boxHeight - padding, "Ammo", cl.stats[QStatsDef.STAT_AMMO].ToString( ) );
+            //}
+            //else
+            //{
+            //    DrawStat( padding + ( ( boxWidth + padding ) * 1 ), sH - boxHeight - padding, "Ammo", cl.stats[QStatsDef.STAT_AMMO].ToString( ) );
+            //}
 
             //var padding = _drawer.MeasureCharacter( 'T' );
 
@@ -193,17 +232,18 @@ namespace SharpQuake.Rendering.UI.Elements.HUD
             if ( _screen.Elements.Get<VisualConsole>( ElementFactory.CONSOLE )?.ConCurrent == vid.height )
                 return;		// console is full screen
 
+            var isDemo = _clientState.StaticData.demoplayback;
+
+            if ( isDemo && _menus.CurrentMenu != null )
+                return;
+            
             if ( Cvars.NewUI?.Get<Boolean>() == true )
             {
                 DrawNewHUD( );
                 return;
             }
-            if ( _Updates >= vid.numpages )
-                return;
 
             _videoState.ScreenCopyEverything = true;
-
-            _Updates++;
 
             if ( _resources.Lines > 0 && vid.width > 320 )
                 _drawer.TileClear( 0, vid.height - _resources.Lines, vid.width, _resources.Lines );
@@ -307,6 +347,40 @@ namespace SharpQuake.Rendering.UI.Elements.HUD
             {
                 if ( _clientState.Data.gametype == ProtocolDef.GAME_DEATHMATCH )
                     MiniDeathmatchOverlay( );
+            }
+        }
+
+        private void DrawAmmoIcon( int x, int y )
+        {
+            var cl = _clientState.Data;
+
+            if ( Engine.Common.GameKind == GameKind.Rogue )
+            {
+                if ( cl.HasItems( QItemsDef.RIT_SHELLS ) )
+                    _resources.DrawPic( x, y, _resources.Ammo[0] );
+                else if ( cl.HasItems( QItemsDef.RIT_NAILS ) )
+                    _resources.DrawPic( x, y, _resources.Ammo[1] );
+                else if ( cl.HasItems( QItemsDef.RIT_ROCKETS ) )
+                    _resources.DrawPic( x, y, _resources.Ammo[2] );
+                else if ( cl.HasItems( QItemsDef.RIT_CELLS ) )
+                    _resources.DrawPic( x, y, _resources.Ammo[3] );
+                else if ( cl.HasItems( QItemsDef.RIT_LAVA_NAILS ) )
+                    _resources.DrawPic( x, y, _resources.RAmmo[0] );
+                else if ( cl.HasItems( QItemsDef.RIT_PLASMA_AMMO ) )
+                    _resources.DrawPic( x, y, _resources.RAmmo[1] );
+                else if ( cl.HasItems( QItemsDef.RIT_MULTI_ROCKETS ) )
+                    _resources.DrawPic( x, y, _resources.RAmmo[2] );
+            }
+            else
+            {
+                if ( cl.HasItems( QItemsDef.IT_SHELLS ) )
+                    _resources.DrawPic( x, y, _resources.Ammo[0] );
+                else if ( cl.HasItems( QItemsDef.IT_NAILS ) )
+                    _resources.DrawPic( x, y, _resources.Ammo[1] );
+                else if ( cl.HasItems( QItemsDef.IT_ROCKETS ) )
+                    _resources.DrawPic( x, y, _resources.Ammo[2] );
+                else if ( cl.HasItems( QItemsDef.IT_CELLS ) )
+                    _resources.DrawPic( x, y, _resources.Ammo[3] );
             }
         }
 
@@ -671,6 +745,81 @@ namespace SharpQuake.Rendering.UI.Elements.HUD
                 anim = 0;
 
             _resources.DrawPic( 112, 0, _resources.Faces[f, anim] );
+        }
+
+        private void DrawFace( int x, int y )
+        {
+            var cl = _clientState.Data;
+
+            Int32 f, anim;
+
+            if ( cl.HasItems( QItemsDef.IT_INVISIBILITY | QItemsDef.IT_INVULNERABILITY ) )
+            {
+                _resources.DrawPic( x, y, _resources.FaceInvisInvuln );
+                return;
+            }
+            if ( cl.HasItems( QItemsDef.IT_QUAD ) )
+            {
+                _resources.DrawPic( x, y, _resources.FaceQuad );
+                return;
+            }
+            if ( cl.HasItems( QItemsDef.IT_INVISIBILITY ) )
+            {
+                _resources.DrawPic( x, y, _resources.FaceInvis );
+                return;
+            }
+            if ( cl.HasItems( QItemsDef.IT_INVULNERABILITY ) )
+            {
+                _resources.DrawPic( x, y, _resources.FaceInvuln );
+                return;
+            }
+
+            if ( cl.stats[QStatsDef.STAT_HEALTH] >= 100 )
+                f = 4;
+            else
+                f = cl.stats[QStatsDef.STAT_HEALTH] / 20;
+
+            if ( cl.time <= cl.faceanimtime )
+            {
+                anim = 1;
+                _Updates = 0; // make sure the anim gets drawn over
+            }
+            else
+                anim = 0;
+
+            _resources.DrawPic( x, y, _resources.Faces[f, anim] );
+        }
+
+        public void DrawArmour( int x, int y )
+        {
+            var cl = _clientState.Data;
+
+            // armor
+            if ( cl.HasItems( QItemsDef.IT_INVULNERABILITY ) )
+            {
+                _video.Device.Graphics.DrawPicture( _screen.Elements.Get<LoadingDisc>( ElementFactory.DISC )?.Disc, x, y );
+            }
+            else
+            {
+                if ( Engine.Common.GameKind == GameKind.Rogue )
+                {
+                    if ( cl.HasItems( QItemsDef.RIT_ARMOR3 ) )
+                        _resources.DrawPic( x, y, _resources.Armour[2] );
+                    else if ( cl.HasItems( QItemsDef.RIT_ARMOR2 ) )
+                        _resources.DrawPic( x, y, _resources.Armour[1] );
+                    else if ( cl.HasItems( QItemsDef.RIT_ARMOR1 ) )
+                        _resources.DrawPic( x, y, _resources.Armour[0] );
+                }
+                else
+                {
+                    if ( cl.HasItems( QItemsDef.IT_ARMOR3 ) )
+                        _resources.DrawPic( x, y, _resources.Armour[2] );
+                    else if ( cl.HasItems( QItemsDef.IT_ARMOR2 ) )
+                        _resources.DrawPic( x, y, _resources.Armour[1] );
+                    else if ( cl.HasItems( QItemsDef.IT_ARMOR1 ) )
+                        _resources.DrawPic( x, y, _resources.Armour[0] );
+                }
+            }
         }
 
         // Sbar_DeathmatchOverlay

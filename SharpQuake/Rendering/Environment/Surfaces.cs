@@ -255,10 +255,12 @@ namespace SharpQuake.Rendering.Environment
 			if ( Cvars.WaterAlpha.Get<Single>( ) == 1.0f && Cvars.glTexSort.Get<Boolean>( ) )
 				return;
 
-			//
-			// go back to the world matrix
-			//
-			_video.Device.ResetMatrix( );
+            var world = _clientState.Data.worldmodel;
+
+            //
+            // go back to the world matrix
+            //
+            _video.Device.ResetMatrix( );
 
 			// WaterAlpha is broken - will fix when we introduce GLSL...
 			//if ( _WaterAlpha.Value < 1.0 )
@@ -299,8 +301,13 @@ namespace SharpQuake.Rendering.Environment
 
 					t.texture.Bind( );
 
-					for ( ; s != null; s = s.texturechain )
-                        _gameRenderer.WarpableTextures.EmitWaterPolys( Time.Absolute, s );
+					var waterAlpha = Cvars.WaterAlpha.Get<float>( );
+
+                    for ( ; s != null; s = s.texturechain )
+					{
+                        world.DrawPoly( s, true, Time.Absolute, true, WarpDef.TURBSCALE, waterAlpha );
+                        //_gameRenderer.WarpableTextures.EmitWaterPolys( Time.Absolute, s );
+					}
 
 					t.texturechain = null;
 				}
@@ -369,7 +376,9 @@ namespace SharpQuake.Rendering.Environment
 					continue;
 
 				if ( i == _renderer.World.Sky.TextureNumber )
-                    _gameRenderer.WarpableTextures.DrawSkyChain( Time.Absolute, _renderer.Origin, s );
+				{
+					_gameRenderer.WarpableTextures.DrawSkyChain( Time.Absolute, _renderer.Origin, s );
+				}
 				//else if( i == _MirrorTextureNum && _MirrorAlpha.Value != 1.0f )
 				//{
 				//    MirrorChain( s );
@@ -406,7 +415,7 @@ namespace SharpQuake.Rendering.Environment
 			if ( ( fa.flags & ( Int32 ) Q1SurfaceFlags.Turbulence ) != 0 )
 			{   // warp texture, no lightmaps
                 //_gameRenderer.WarpableTextures.EmitWaterPolys( Time.Absolute, fa );
-                model.DrawPoly( fa, true, Time.Absolute, true, WarpDef.TURBSCALE );
+                model.DrawPoly( fa, true, Time.Absolute, true, WarpDef.TURBSCALE, 1f );
                 return;
 			}
 

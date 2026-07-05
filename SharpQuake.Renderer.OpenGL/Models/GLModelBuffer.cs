@@ -116,24 +116,36 @@ namespace SharpQuake.Renderer.OpenGL.Models
             Shader.Use( );
         }
 
-
         public override void End( )
         {
-            GL.Disable( EnableCap.Texture2D );
+            GL.UseProgram( 0 );
 
-            GL.DisableClientState( ArrayCap.VertexArray );
+            GL.ClientActiveTexture( TextureUnit.Texture1 );
             GL.DisableClientState( ArrayCap.TextureCoordArray );
 
-            GL.BindBuffer( BufferTarget.ArrayBuffer, 0 );
+            GL.ClientActiveTexture( TextureUnit.Texture0 );
+            GL.DisableClientState( ArrayCap.TextureCoordArray );
+            GL.DisableClientState( ArrayCap.VertexArray );
 
+            GL.BindBuffer( BufferTarget.ArrayBuffer, 0 );
+            GL.BindBuffer( BufferTarget.ElementArrayBuffer, 0 );
+
+            GL.ActiveTexture( TextureUnit.Texture1 );
             GL.BindTexture( TextureTarget.Texture2D, 0 );
+            GL.Disable( EnableCap.Texture2D );
+
             GL.ActiveTexture( TextureUnit.Texture0 );
-            GL.UseProgram( 0 );
+            GL.BindTexture( TextureTarget.Texture2D, 0 );
+            GL.Disable( EnableCap.Texture2D );
+
+            GL.ClientActiveTexture( TextureUnit.Texture0 );
+
+            GL.Disable( EnableCap.Blend );
         }
 
         private BaseTexture ActiveTex;
 
-        public override void BeginTexture( BaseTexture texture, BaseTexture lightmapTexture, Double time, bool noLightmap, bool waveDistort, Double waveScale )
+        public override void BeginTexture( BaseTexture texture, BaseTexture lightmapTexture, Double time, bool noLightmap, bool waveDistort, Double waveScale, float opacity )
         {
             ActiveTex = texture;
 
@@ -143,6 +155,20 @@ namespace SharpQuake.Renderer.OpenGL.Models
             GL.ActiveTexture( TextureUnit.Texture0 );
             ActiveTex?.Bind( );
             Shader.SetInt32( "tex", 0 );
+
+            var isTransparent = opacity < 1f;
+
+            if ( isTransparent )
+            {
+                GL.Enable( EnableCap.Blend );
+                GL.BlendFunc( BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha );
+
+                Shader.SetSingle( "opacity", opacity );
+            }
+            else
+            {
+                Shader.SetSingle( "opacity", 1f );
+            }
 
             if ( noLightmap )
             {
@@ -171,6 +197,8 @@ namespace SharpQuake.Renderer.OpenGL.Models
                 Shader.SetSingle( "time", 0 );
                 Shader.SetSingle( "turbScale", 0 );
             }
+
+            GL.ActiveTexture( TextureUnit.Texture0 );
         }
 
         public override void DrawPoly( GLPoly poly )

@@ -2,6 +2,7 @@
 uniform sampler2D tex;
 uniform sampler2D lm;
 uniform int noLm;
+uniform float opacity;
 uniform int waveDistort;
 uniform float time;
 uniform float turbScale;
@@ -27,12 +28,13 @@ void main()
     if (noLm == 0)
     {
         vec4 lmc = texture2D(lm, gl_TexCoord[1].st);
-        finalColor = color.rgb * lmc.r;
+        float light = min(lmc.r * 2.0, 1.0);
+        finalColor = color.rgb * light;
     }
     else
     {
         finalColor = color.rgb;
     }
 
-    gl_FragColor = vec4(finalColor, color.a);
+    gl_FragColor = vec4(finalColor, color.a * opacity);
 }

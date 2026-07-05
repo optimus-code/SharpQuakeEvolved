@@ -50,7 +50,6 @@ namespace SharpQuake.Rendering.UI.Elements
 	{
 		const Char PREFIX = ']';
 
-
         public override Boolean ManualInitialisation
         {
             get
@@ -575,6 +574,12 @@ namespace SharpQuake.Rendering.UI.Elements
 			}
         }
 
+		public void DrawUIBox( int x, int y, int width, int height )
+		{
+            _video.Device.Graphics.Fill( x, y, width, height, HudResources.NEWUI_BG );
+            _video.Device.Graphics.LineFill( x, y, width, height, HudResources.NEWUI_BORDER, 1 );
+        }
+
 		/// <summary>
 		/// Draw the auto-complete window that pops up when typing
 		/// </summary>
@@ -601,17 +606,16 @@ namespace SharpQuake.Rendering.UI.Elements
             var height = _drawer.CharacterAdvanceHeight( ) * ( displayCount + ( showEllipsis? 1 : 0 ) ) + ( padding * 2 );
 			var newUI = Cvars.NewUI.Get<Boolean>( );
 
-			//if ( newUI )
-			//{
-			//	_video.Device.Graphics.Fill( 0, yAdvance - padding, longestWidth + ( padding * 2 ), height, Color.FromArgb( 210, 0, 0, 0 ) );
-			//	_video.Device.Graphics.LineFill( 0, yAdvance - padding, longestWidth + ( padding * 2 ), height, Color.White, 1 );
-			//}
-			//else
-			//{
+			if ( newUI )
+			{
+				DrawUIBox( 0, yAdvance - padding, longestWidth + ( padding * 2 ), height );
+			}
+			else
+			{
 				_drawer.DrawFrame( new Rectangle( 0, yAdvance - padding, longestWidth + ( padding * 2 ), height ), 4 );
-			//}
+			}
 
-            foreach ( var line in Autocomplete.Take( displayCount ) )
+			foreach ( var line in Autocomplete.Take( displayCount ) )
             {
 				var text = line;
 
@@ -917,9 +921,18 @@ namespace SharpQuake.Rendering.UI.Elements
 
             var y = ( _videoState.Data.height * 3 ) >> 2;
 
+            var newUI = Cvars.NewUI.Get<Boolean>( );
+			
 			if ( lines > y )
 			{
-                _video.Device.Graphics.DrawPicture( ConsoleBackground, 0, lines - _videoState.Data.height, _videoState.Data.width, _videoState.Data.height );
+				if ( newUI )
+				{
+					_video.Device.Graphics.Fill( 0, lines - _videoState.Data.height, _videoState.Data.width, _videoState.Data.height, HudResources.NEWUI_BG );
+				}
+				else
+				{
+					_video.Device.Graphics.DrawPicture( ConsoleBackground, 0, lines - _videoState.Data.height, _videoState.Data.width, _videoState.Data.height );
+				}
 			}
 			else
 			{
@@ -927,14 +940,16 @@ namespace SharpQuake.Rendering.UI.Elements
 
                 var aspectRatio = ConsoleBackground.Height / ( float )ConsoleBackground.Width;
 				var bgheight = ( Int32 ) ( _videoState.Data.width * aspectRatio );
-                //if ( Cvars.NewUI?.Get<Boolean>( ) == true )
-                //{
-                //	_video.Device.Graphics.Fill( 0, 0, _videoState.Data.width, height, Color.FromArgb( 210, 0, 0, 0 ) );
-                //    _video.Device.Graphics.Fill( 0, height, _videoState.Data.width, 2, Color.FromArgb( 210, 255, 255, 255 ) );
-                //}
-                //else
-                _video.Device.Graphics.DrawPicture( ConsoleBackground, 0, height - bgheight, _videoState.Data.width, bgheight, Color.FromArgb( alpha, Color.White ) );
 
+				if ( newUI )
+				{
+					_video.Device.Graphics.Fill( 0, height - bgheight, _videoState.Data.width, bgheight, HudResources.NEWUI_BG );
+					_video.Device.Graphics.Fill( 0, height + 2, _videoState.Data.width, 2, HudResources.NEWUI_BORDER );
+				}
+				else
+				{
+					_video.Device.Graphics.DrawPicture( ConsoleBackground, 0, height - bgheight, _videoState.Data.width, bgheight, Color.FromArgb( alpha, Color.White ) );
+				}
 			}
 		}
 

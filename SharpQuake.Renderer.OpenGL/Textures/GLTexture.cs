@@ -33,12 +33,6 @@ namespace SharpQuake.Renderer.OpenGL.Textures
 {
     public class GLTexture : BaseTexture
     {
-        public static Int32 CurrentTextureNumber
-        {
-            get;
-            set;
-        }
-
         public static Int32 Texels
         {
             get;
@@ -47,7 +41,6 @@ namespace SharpQuake.Renderer.OpenGL.Textures
 
         static GLTexture()
         {
-            CurrentTextureNumber = 1;
         }
 
         public GLTextureDesc GLDesc
@@ -68,6 +61,7 @@ namespace SharpQuake.Renderer.OpenGL.Textures
         // gl_solid_format = 3
         public PixelInternalFormat AlphaFormat = PixelInternalFormat.Four;
 
+        private int[] _lightmapTextureIDs;
 
         public GLTexture( GLDevice device, GLTextureDesc desc ) : base( device, desc )
         {
@@ -80,9 +74,7 @@ namespace SharpQuake.Renderer.OpenGL.Textures
 
             if ( !Desc.IsLightMap )
             {
-                GLDesc.TextureNumber = CurrentTextureNumber;
-                GL.GenTexture( );
-                GenerateTextureNumber( );
+                GLDesc.TextureNumber = GL.GenTexture( );
             }
         }
 
@@ -92,9 +84,7 @@ namespace SharpQuake.Renderer.OpenGL.Textures
 
             if ( !Desc.IsLightMap )
             {
-                GLDesc.TextureNumber = CurrentTextureNumber;
-                GL.GenTexture( );
-                GenerateTextureNumber( );
+                GLDesc.TextureNumber = GL.GenTexture( );
             }
         }
 
@@ -107,8 +97,6 @@ namespace SharpQuake.Renderer.OpenGL.Textures
         {
             if ( Desc.IsLightMap )
             {
-                GLDesc.TextureNumber = CurrentTextureNumber;
-
                 Bind( );
                 UploadLightmap( );
             }
@@ -121,9 +109,6 @@ namespace SharpQuake.Renderer.OpenGL.Textures
                 else
                     Upload8( resample );
             }
-
-            if ( Desc.IsLightMap )
-                GenerateTextureNumber( );
         }
 
         // GL_Upload32
@@ -218,6 +203,9 @@ namespace SharpQuake.Renderer.OpenGL.Textures
         {
             var lightmaps = Buffer.Data;
 
+            if ( _lightmapTextureIDs == null || _lightmapTextureIDs.Length != RenderDef.MAX_LIGHTMAPS )
+                _lightmapTextureIDs = new int[RenderDef.MAX_LIGHTMAPS];
+
             var handle = GCHandle.Alloc( lightmaps, GCHandleType.Pinned );
             try
             {
@@ -235,7 +223,10 @@ namespace SharpQuake.Renderer.OpenGL.Textures
                     LightMapRectChange[i].w = 0;
                     LightMapRectChange[i].h = 0;
 
-                    GL.BindTexture( TextureTarget.Texture2D, GLDesc.TextureNumber + i );
+                    if ( _lightmapTextureIDs[i] == 0 )
+                        _lightmapTextureIDs[i] = GL.GenTexture( );
+
+                    GL.BindTexture( TextureTarget.Texture2D, _lightmapTextureIDs[i] );
 
                     Device.SetTextureFilters( "GL_LINEAR" );
 
@@ -244,37 +235,58 @@ namespace SharpQuake.Renderer.OpenGL.Textures
                     var addr = lmAddr + i * RenderDef.BLOCK_WIDTH * RenderDef.BLOCK_HEIGHT * Desc.LightMapBytes;
                     GL.TexImage2D( TextureTarget.Texture2D, 0, ( PixelInternalFormat ) Desc.LightMapBytes,
                         RenderDef.BLOCK_WIDTH, RenderDef.BLOCK_HEIGHT, 0, pixelFormat.Value, PixelType.UnsignedByte, new IntPtr( addr ) );
-                    GenerateTextureNumber( );
                 }
             }
             finally
             {
                 handle.Free( );
             }
-
-            GenerateTextureNumber( );
         }
 
         public override void CommitLightmap( Byte[] data, Int32 i )
         {
+            if ( _lightmapTextureIDs == null ||
+                i < 0 ||
+                i >= _lightmapTextureIDs.Length ||
+                _lightmapTextureIDs[i] == 0 )
+            {
+                return;
+            }
+
+            GL.BindTexture( TextureTarget.Texture2D, _lightmapTextureIDs[i] );
+
             LightMapModified[i] = false;
             var theRect = LightMapRectChange[i];
-            var handle = GCHandle.Alloc( data, GCHandleType.Pinned );
 
-            var format = ( GLPixelFormat ) Device.PixelFormats.Where( p => p.Name == Desc.LightMapFormat ).FirstOrDefault( );
+            var handle = GCHandle.Alloc( data, GCHandleType.Pinned );
+            var format = ( GLPixelFormat ) Device.PixelFormats
+                .Where( p => p.Name == Desc.LightMapFormat )
+                .FirstOrDefault( );
 
             try
             {
-                var addr = handle.AddrOfPinnedObject( ).ToInt64( ) +
-                    ( i * RenderDef.BLOCK_HEIGHT + theRect.t ) * RenderDef.BLOCK_WIDTH * Desc.LightMapBytes;
-                GL.TexSubImage2D( TextureTarget.Texture2D, 0, 0, theRect.t,
-                    RenderDef.BLOCK_WIDTH, theRect.h, format == null ? PixelFormat.Rgba : format.Value,
-                    PixelType.UnsignedByte, new IntPtr( addr ) );
+                var addr =
+                    handle.AddrOfPinnedObject( ).ToInt64( ) +
+                    ( i * RenderDef.BLOCK_HEIGHT + theRect.t ) *
+                    RenderDef.BLOCK_WIDTH *
+                    Desc.LightMapBytes;
+
+                GL.TexSubImage2D(
+                    TextureTarget.Texture2D,
+                    0,
+                    0,
+                    theRect.t,
+                    RenderDef.BLOCK_WIDTH,
+                    theRect.h,
+                    format == null ? PixelFormat.Rgba : format.Value,
+                    PixelType.UnsignedByte,
+                    new IntPtr( addr ) );
             }
             finally
             {
                 handle.Free( );
             }
+
             theRect.l = RenderDef.BLOCK_WIDTH;
             theRect.t = RenderDef.BLOCK_HEIGHT;
             theRect.h = 0;
@@ -284,7 +296,15 @@ namespace SharpQuake.Renderer.OpenGL.Textures
 
         public override void BindLightmap( Int32 number )
         {
-            GL.BindTexture( TextureTarget.Texture2D, number );
+            if ( _lightmapTextureIDs == null ||
+                number < 0 ||
+                number >= _lightmapTextureIDs.Length ||
+                _lightmapTextureIDs[number] == 0 )
+            {
+                return;
+            }
+
+            GL.BindTexture( TextureTarget.Texture2D, _lightmapTextureIDs[number] );
         }
 
         public override void TranslateAndUpload( Byte[] original, Byte[] translate, Int32 inWidth, Int32 inHeight, Int32 maxWidth = 512, Int32 maxHeight = 256, Int32 mip = 0 )
@@ -341,22 +361,26 @@ namespace SharpQuake.Renderer.OpenGL.Textures
             Device.SetTextureFilters( "GL_LINEAR" );
         }
 
-        /// <summary>
-        /// gets texture_extension_number++
-        /// </summary>
-        public static Int32 GenerateTextureNumber( )
-        {
-            return CurrentTextureNumber++;
-        }
-
         public override void Dispose( )
         {
             base.Dispose( );
 
-            if ( GLDesc.TextureNumber >= 0 )
+            if ( GLDesc.TextureNumber > 0 )
             {
                 GL.DeleteTexture( GLDesc.TextureNumber );
                 GLDesc.TextureNumber = -1;
+            }
+
+            if ( _lightmapTextureIDs != null )
+            {
+                for ( var i = 0; i < _lightmapTextureIDs.Length; i++ )
+                {
+                    if ( _lightmapTextureIDs[i] != 0 )
+                    {
+                        GL.DeleteTexture( _lightmapTextureIDs[i] );
+                        _lightmapTextureIDs[i] = 0;
+                    }
+                }
             }
         }
     }

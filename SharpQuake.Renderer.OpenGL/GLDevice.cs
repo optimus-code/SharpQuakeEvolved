@@ -56,9 +56,9 @@ namespace SharpQuake.Renderer.OpenGL
             set;
         }
 
-        public TKMatrix4 Projection;
         public TKMatrix4 View;
         public TKMatrix4 WorldMatrix; // r_world_matrix
+        public TKMatrix4 Projection;
 
         private int _frameBuffer;
         private IRenderTexture _renderTexture;
@@ -156,7 +156,6 @@ namespace SharpQuake.Renderer.OpenGL
             _frameBuffer = GL.GenFramebuffer( );
             GL.BindFramebuffer( FramebufferTarget.Framebuffer, _frameBuffer );
 
-            GLTexture.CurrentTextureNumber++;
             _renderTexture = new GLRenderTexture( GL.GenTexture( ), Desc.ActualWidth, Desc.ActualHeight );
 
             GL.BindTexture( TextureTarget.Texture2D, _renderTexture.ID );
@@ -314,8 +313,9 @@ namespace SharpQuake.Renderer.OpenGL
                 Utilities.Error( $"Couldn't set video mode: {ex.Message}" );
             }
 
-            Desc.ActualWidth = Form.ClientSize.X;
-            Desc.ActualHeight = Form.ClientSize.Y;
+            Desc.ActualWidth = Form.FramebufferSize.X;
+            Desc.ActualHeight = Form.FramebufferSize.Y;
+
             _hasInitialisedRenderBuffers = false;
         }
 
@@ -333,16 +333,19 @@ namespace SharpQuake.Renderer.OpenGL
 
         public override void ResetMatrix( )
         {
-            GL.LoadMatrix( ref WorldMatrix );
+            GL.MatrixMode( MatrixMode.Modelview );
+            GL.LoadMatrix( ref View );
         }
 
         public override void PushMatrix( )
         {
+            GL.MatrixMode( MatrixMode.Modelview );
             GL.PushMatrix( );
         }
 
         public override void PopMatrix( )
         {
+            GL.MatrixMode( MatrixMode.Modelview );
             GL.PopMatrix( );
         }
 
@@ -361,9 +364,41 @@ namespace SharpQuake.Renderer.OpenGL
             GL.Viewport( x, y, width, height );
         }
 
+        private void BuildProjectionMatrix( double fovy, double aspect, double zNear, double zFar )
+        {
+            var ymax = zNear * Math.Tan( fovy * Math.PI / 360.0 );
+            var ymin = -ymax;
+            var xmin = ymin * aspect;
+            var xmax = ymax * aspect;
+
+            Projection = TKMatrix4.CreatePerspectiveOffCenter(
+                ( float ) xmin,
+                ( float ) xmax,
+                ( float ) ymin,
+                ( float ) ymax,
+                ( float ) zNear,
+                ( float ) zFar );
+        }
+
+        private void BuildViewMatrix( refdef_t renderDef )
+        {
+            View =
+                TKMatrix4.CreateTranslation(
+                    -renderDef.vieworg.X,
+                    -renderDef.vieworg.Y,
+                    -renderDef.vieworg.Z ) *
+                TKMatrix4.CreateRotationZ( TKMathHelper.DegreesToRadians( -renderDef.viewangles.Y ) ) *
+                TKMatrix4.CreateRotationY( TKMathHelper.DegreesToRadians( -renderDef.viewangles.X ) ) *
+                TKMatrix4.CreateRotationX( TKMathHelper.DegreesToRadians( -renderDef.viewangles.Z ) ) *
+                TKMatrix4.CreateRotationZ( TKMathHelper.DegreesToRadians( 90f ) ) *
+                TKMatrix4.CreateRotationX( TKMathHelper.DegreesToRadians( -90f ) );
+        }
+
         public override void Begin2DScene( )
         {
             End3DRenderTarget( );
+
+            RenderPostFX( );
 
             SetViewport( Desc.ViewRect );
 
@@ -380,8 +415,6 @@ namespace SharpQuake.Renderer.OpenGL
             GL.Enable( EnableCap.AlphaTest );
 
             GL.Color4( 1.0f, 1.0f, 1.0f, 1.0f );
-
-            RenderPostFX( );
         }
 
         public override void End2DScene( )
@@ -403,7 +436,28 @@ namespace SharpQuake.Renderer.OpenGL
             if ( _renderTexture == null )
                 return;
 
+            GL.BindFramebuffer( FramebufferTarget.Framebuffer, 0 );
+
+            GL.Viewport( 0, 0, Desc.ActualWidth, Desc.ActualHeight );
+
+            GL.MatrixMode( MatrixMode.Projection );
+            GL.LoadIdentity( );
+            GL.Ortho( 0, Desc.ActualWidth, Desc.ActualHeight, 0, -1, 1 );
+
+            GL.MatrixMode( MatrixMode.Modelview );
+            GL.LoadIdentity( );
+
+            GL.Disable( EnableCap.DepthTest );
+            GL.Disable( EnableCap.CullFace );
+            GL.Disable( EnableCap.Blend );
+            GL.Disable( EnableCap.AlphaTest );
+
+            GL.ActiveTexture( TextureUnit.Texture0 );
+            GL.ClientActiveTexture( TextureUnit.Texture0 );
+
             _postProcessShaderProgram.Use( );
+            _postProcessShaderProgram.SetInt32( "tex", 0 );
+            _postProcessShaderProgram.SetInt32( "blur", Desc.BlurPostFX ? 1 : 0 );
 
             Graphics.DrawTexture2D( _renderTexture );
 
@@ -411,9 +465,13 @@ namespace SharpQuake.Renderer.OpenGL
         }
 
         public override void Setup3DScene( Boolean cull, refdef_t renderDef, Boolean isEnvMap )
-        {
+        {            
+            var screenaspect = ( Single ) renderDef.vrect.width / renderDef.vrect.height;
+
+            BuildProjectionMatrix( renderDef.fov_y, screenaspect, 4, 4096 );
+
             GL.MatrixMode( MatrixMode.Projection );
-            GL.LoadIdentity( );
+            GL.LoadMatrix( ref Projection );
 
             var x = renderDef.vrect.x * Desc.ActualWidth / Desc.Width;
             var x2 = ( renderDef.vrect.x + renderDef.vrect.width ) * Desc.ActualWidth / Desc.Width;
@@ -440,21 +498,11 @@ namespace SharpQuake.Renderer.OpenGL
 
             GL.Viewport( x, y2, w, h );
 
-            var screenaspect = ( Single ) renderDef.vrect.width / renderDef.vrect.height;
-
-            BuildProjectionMatrix( renderDef.fov_y, screenaspect, 4, 4096 );
-
             GL.CullFace( CullFaceMode.Front );
-
-            GL.MatrixMode( MatrixMode.Modelview );
-            GL.LoadIdentity( );
 
             BuildViewMatrix( renderDef );
 
-            WorldMatrix = View * Projection;
-
-            GL.MatrixMode( MatrixMode.Projection );
-            GL.LoadMatrix( ref Projection );
+            WorldMatrix = View;
 
             GL.MatrixMode( MatrixMode.Modelview );
             GL.LoadMatrix( ref View );
@@ -470,25 +518,6 @@ namespace SharpQuake.Renderer.OpenGL
 
             ConfigureFrameBuffers( );
             Begin3DRenderTarget( );
-        }
-
-        /// <summary>
-        /// Build view matrix.
-        /// </summary>
-        private void BuildViewMatrix( refdef_t renderDef )
-        {
-            View =
-                TKMatrix4.CreateTranslation( new TKVector3( -renderDef.vieworg.X, -renderDef.vieworg.Y, -renderDef.vieworg.Z ) ) *
-                TKMatrix4.CreateRotationZ( TKMathHelper.DegreesToRadians( -renderDef.viewangles.Y ) ) *
-                TKMatrix4.CreateRotationY( TKMathHelper.DegreesToRadians( -renderDef.viewangles.X ) ) *
-                TKMatrix4.CreateRotationX( TKMathHelper.DegreesToRadians( -renderDef.viewangles.Z ) ) *
-                TKMatrix4.CreateRotationZ( TKMathHelper.DegreesToRadians( 90f ) ) *
-                TKMatrix4.CreateRotationX( TKMathHelper.DegreesToRadians( -90f ) );
-        }
-
-        private void BuildProjectionMatrix( Single fovy, Single aspect, Single zNear, Single zFar )
-        {
-            Projection = TKMatrix4.CreatePerspectiveFieldOfView( TKMathHelper.DegreesToRadians( fovy ), aspect, zNear, zFar );
         }
 
         public override void Clear( Boolean zTrick, Single clear )

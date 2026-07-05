@@ -217,6 +217,7 @@ namespace SharpQuake.Factories.Rendering.UI
 		public void SetActive( BaseMenu menu )
 		{
 			CurrentMenu = menu;
+			_video.Device.Desc.BlurPostFX = menu != null;
 		}
 
 		/// <summary>

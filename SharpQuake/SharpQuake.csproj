@@ -1,70 +1,49 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <OutputType>WinExe</OutputType>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
-    <PublishUrl>publish\</PublishUrl>
-    <Install>true</Install>
-    <InstallFrom>Disk</InstallFrom>
-    <UpdateEnabled>false</UpdateEnabled>
-    <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
-    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <UseApplicationTrust>false</UseApplicationTrust>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-	<LangVersion>10.0</LangVersion>
-  </PropertyGroup>
-  <PropertyGroup>
+
     <StartupObject>SharpQuake.idTech1</StartupObject>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
-    <DefineConstants></DefineConstants>
-    <CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
-    <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-  <PropertyGroup>
     <ApplicationIcon>quake.ico</ApplicationIcon>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <OutputPath>bin\x86\Debug\</OutputPath>
+
+    <Platforms>AnyCPU</Platforms>
+
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
+
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>14</LangVersion>
+
+	<AssemblyTitle>SharpQuake</AssemblyTitle>
+	<Description></Description>
+	<Company></Company>
+	<Product>SharpQuake</Product>
+	<Copyright>Copyright © 2010 Yury Kiselev, Updates: Daniel Cornelius (Jan 2019) optimus-code (Jun 2019)</Copyright>
+
+	<AssemblyVersion>1.5.0.0</AssemblyVersion>
+	<FileVersion>1.5.0.0</FileVersion>
+	<Version>1.5.0</Version>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <OutputPath>bin\x86\Release\</OutputPath>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
-    <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
-  </PropertyGroup>
-  <ItemGroup>
-    <Content Include="quake.ico" />
-  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\SharpQuake.Framework\SharpQuake.Framework.csproj" />
     <ProjectReference Include="..\SharpQuake.Game\SharpQuake.Game.csproj" />
     <ProjectReference Include="..\SharpQuake.Renderer.OpenGL\SharpQuake.Renderer.OpenGL.csproj" />
     <ProjectReference Include="..\SharpQuake.Renderer\SharpQuake.Renderer.csproj" />
   </ItemGroup>
+
   <ItemGroup>
-	<PackageReference Include="Hardware.Info" Version="110.0.0.1" />
+    <PackageReference Include="Hardware.Info" Version="110.0.0.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.9" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.9" />
     <PackageReference Include="NVorbis" Version="0.10.5" />
     <PackageReference Include="OpenTK" Version="4.9.4" />
-    <PackageReference Include="OpenTK.Audio.OpenAL" Version="4.9.4" />	  
+    <PackageReference Include="OpenTK.Audio.OpenAL" Version="4.9.4" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+
 </Project>

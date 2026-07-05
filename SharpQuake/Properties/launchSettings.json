@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SharpQuake": {
+      "commandName": "Project",
+      "commandLineArgs": "-window"
+    }
+  }
+}

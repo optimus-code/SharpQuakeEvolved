@@ -28,6 +28,7 @@ using SharpQuake.Networking.Client;
 using SharpQuake.Renderer.Textures;
 using SharpQuake.Sys;
 using System;
+using System.Drawing;
 
 namespace SharpQuake.Rendering.UI
 {
@@ -93,9 +94,45 @@ namespace SharpQuake.Rendering.UI
         {
             get
             {
-                return 4;
+                return 2;
             }
         }
+
+        private Int32 HudScale => Scale;
+
+        private Int32 HudOriginX
+        {
+            get
+            {
+                var isNewUI = Cvars.NewUI.Get<bool>( );
+
+                if ( isNewUI )
+                    return 0;
+
+                if ( _clientState.Data.gametype == ProtocolDef.GAME_DEATHMATCH )
+                    return 0;
+
+                return ( _videoState.Data.width - ( 320 * HudScale ) ) >> 1;
+            }
+        }
+
+        private Int32 HudOriginY
+        {
+            get
+            {
+                var isNewUI = Cvars.NewUI.Get<bool>( );
+
+                if ( isNewUI )
+                {
+                    return 0;
+                }
+
+                return _videoState.Data.height - ( SBAR_HEIGHT * HudScale );
+            }
+        }
+
+        public static readonly Color NEWUI_BG = Color.FromArgb( 210, 21, 21, 21 );
+        public static readonly Color NEWUI_BORDER = Color.FromArgb( 210, 255, 255, 255 );
 
         private readonly Vid _video;
         private readonly Scr _screen;
@@ -112,6 +149,16 @@ namespace SharpQuake.Rendering.UI
             _wads = wads;
             _clientState = clientState;
             _videoState = videoState;
+        }
+
+        private Int32 ToHudX( Int32 x )
+        {
+            return HudOriginX + ( x * HudScale );
+        }
+
+        private Int32 ToHudY( Int32 y )
+        {
+            return HudOriginY + ( y * HudScale );
         }
 
         private void LoadNumbers( )
@@ -302,12 +349,14 @@ namespace SharpQuake.Rendering.UI
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <param name="pic"></param>
-        public void DrawPic( Int32 x, Int32 y, BasePicture pic, Int32 scale = 1)
+        public void DrawPic( Int32 x, Int32 y, BasePicture pic )
         {
-            if ( _clientState.Data.gametype == ProtocolDef.GAME_DEATHMATCH )
-                _video.Device.Graphics.DrawPicture( pic, x, y + ( _videoState.Data.height - ( SBAR_HEIGHT * scale ) ), scale: scale );
-            else
-                _video.Device.Graphics.DrawPicture( pic, x + ( ( _videoState.Data.width - 320 ) >> 1 ), y + ( _videoState.Data.height - ( SBAR_HEIGHT * scale ) ), scale: scale );
+            _video.Device.Graphics.DrawPicture(
+                pic,
+                ToHudX( x ),
+                ToHudY( y ),
+                scale: HudScale
+            );
         }
 
         /// <summary>
@@ -318,27 +367,28 @@ namespace SharpQuake.Rendering.UI
         /// <param name="str"></param>
         public void DrawString( Int32 x, Int32 y, String str )
         {
-            if ( _clientState.Data.gametype == ProtocolDef.GAME_DEATHMATCH )
-                _drawer.DrawString( x, y + _videoState.Data.height - SBAR_HEIGHT, str );
-            else
-                _drawer.DrawString( x + ( ( _videoState.Data.width - 320 ) >> 1 ), y + _videoState.Data.height - SBAR_HEIGHT, str );
+            _drawer.DrawString(
+                ToHudX( x ),
+                ToHudY( y ),
+                str,
+                scale: HudScale
+            );
         }
 
         /// <summary>
         /// Sbar_DrawCharacter
         /// </summary>
         /// <remarks>
-        /// Draws one solid graphics character
+        /// Draws one solid graphics character in classic status-bar virtual coordinates.
         /// </remarks>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        /// <param name="num"></param>
-        public void DrawCharacter( Int32 x, Int32 y, Int32 num, Int32 scale = 1 )
+        public void DrawCharacter( Int32 x, Int32 y, Int32 num )
         {
-            if ( _clientState.Data.gametype == ProtocolDef.GAME_DEATHMATCH )
-                _drawer.DrawCharacter( x + ( 4 * scale ), y + _videoState.Data.height - ( SBAR_HEIGHT * scale ), num );
-            else
-                _drawer.DrawCharacter( x + ( ( _videoState.Data.width - ( 320 * scale ) ) >> 1 ) + 4, y + _videoState.Data.height - ( SBAR_HEIGHT * scale ), num );
+            _drawer.DrawCharacter(
+                ToHudX( x + 4 ),
+                ToHudY( y ),
+                num,
+                scale: HudScale
+            );
         }
 
         /// <summary>
@@ -349,12 +399,38 @@ namespace SharpQuake.Rendering.UI
         /// <param name="picture"></param>
         public void DrawTransPic( Int32 x, Int32 y, BasePicture picture )
         {
-            if ( _clientState.Data.gametype == ProtocolDef.GAME_DEATHMATCH )
-                _video.Device.Graphics.DrawPicture( picture, x, y + ( _videoState.Data.height - SBAR_HEIGHT ), hasAlpha: true );
-            else
-                _video.Device.Graphics.DrawPicture( picture, x + ( ( _videoState.Data.width - 320 ) >> 1 ), y + ( _videoState.Data.height - SBAR_HEIGHT ), hasAlpha: true );
+            _video.Device.Graphics.DrawPicture(
+                picture,
+                ToHudX( x ),
+                ToHudY( y ),
+                hasAlpha: true,
+                scale: HudScale
+            );
         }
 
+        public int MeasureNum( int color, int num, int digits, bool includeScale = false )
+        {
+            var str = num.ToString( );// int l = Sbar_itoa(num, str);
+            var x = 0;
+
+            if ( str.Length > digits )
+                str = str.Remove( str.Length - digits );
+
+            for ( Int32 i = 0; i < str.Length; i++ )
+            {
+                x += 24;
+            }
+
+            return includeScale ? x * HudScale : x;
+        }
+
+        public int MeasureNumHeight( int color, bool includeScale = false )
+        {
+            if ( !includeScale )
+                return Numbers[color, 0].Height;
+
+            return Numbers[color, 0].Height * HudScale;
+        }
 
         // Sbar_DrawNum
         public void DrawNum( Int32 x, Int32 y, Int32 num, Int32 digits, Int32 color )

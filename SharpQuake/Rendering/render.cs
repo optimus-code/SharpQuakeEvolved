@@ -194,7 +194,7 @@ namespace SharpQuake
                 Cvars.LightMap = _cvars.Add( "r_lightmap", false );
                 Cvars.Shadows = _cvars.Add( "r_shadows", false );
                 //_MirrorAlpha = _cvars.Add( "r_mirroralpha", "1" );
-                Cvars.WaterAlpha = _cvars.Add( "r_wateralpha", 1f );
+                Cvars.WaterAlpha = _cvars.Add( "r_wateralpha", 0.7f );
                 Cvars.Dynamic = _cvars.Add( "r_dynamic", true );
                 Cvars.NoVis = _cvars.Add( "r_novis", false );
 

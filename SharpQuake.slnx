@@ -1,0 +1,15 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="SharpQuake.Framework/SharpQuake.Framework.csproj">
+    <Platform Solution="*|x86" Project="x86" />
+  </Project>
+  <Project Path="SharpQuake.Game/SharpQuake.Game.csproj" />
+  <Project Path="SharpQuake.Renderer.OpenGL/SharpQuake.Renderer.OpenGL.csproj" />
+  <Project Path="SharpQuake.Renderer/SharpQuake.Renderer.csproj" />
+  <Project Path="SharpQuake/SharpQuake.csproj">
+    <Platform Solution="*|x86" Project="x86" />
+  </Project>
+</Solution>

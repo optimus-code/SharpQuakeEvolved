@@ -254,7 +254,7 @@ namespace SharpQuake
         // It can be clipped to the top of the screen to allow the console to be
         // smoothly scrolled off.
         // Vertex color modification has no effect currently
-        public void DrawCharacter( Int32 x, Int32 y, Int32 num, Boolean forceCharset = false, System.Drawing.Color? color = null, Boolean isBigFont = false )
+        public void DrawCharacter( Int32 x, Int32 y, Int32 num, Boolean forceCharset = false, System.Drawing.Color? color = null, Boolean isBigFont = false, int scale = 4 )
         {
             if ( !forceCharset && num >= 32 && Cvars.TrueTypeFonts.Get<Boolean>() )
             {
@@ -264,7 +264,7 @@ namespace SharpQuake
                     TTFFont.DrawCharacter( x, y, num, color );
             }
             else
-                CharSetFont.DrawCharacter( x, y, num, color );
+                CharSetFont.DrawCharacter( x, y, num, color, scale );
         }
 
         public void DrawCharacterStretched( Int32 x, Int32 y, Int32 num, Int32 width )
@@ -324,7 +324,7 @@ namespace SharpQuake
         }
 
         // Draw_String
-        public void DrawString( Int32 x, Int32 y, String str, Boolean forceCharset = false, System.Drawing.Color? color = null, Boolean isBigFont = false )
+        public void DrawString( Int32 x, Int32 y, String str, Boolean forceCharset = false, System.Drawing.Color? color = null, Boolean isBigFont = false, int scale = 1 )
         {
             if ( !forceCharset && Cvars.TrueTypeFonts.Get<Boolean>( ) )
             {
@@ -334,7 +334,7 @@ namespace SharpQuake
                     TTFFont.Draw( x, y, str, color );
             }
             else
-                CharSetFont.Draw( x, y, str, color );
+                CharSetFont.Draw( x, y, str, color, scale );
         }
 
 		public void DrawRichString( Int32 cx, Int32 cy, String str, Boolean forceCharset = false, Boolean isBigFont = false, Color? colour = null )

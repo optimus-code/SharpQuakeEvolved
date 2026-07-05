@@ -100,6 +100,7 @@ namespace SharpQuake.Desktop
         void Initialise( );
         void Event( Int32 key, Boolean down );
         void WriteBindings( Stream dest );
+        void ReadBindings( Stream dest );
         void ClearStates( );
         String KeynumToString( Int32 keynum );
         void SetBinding( Int32 keynum, String binding );

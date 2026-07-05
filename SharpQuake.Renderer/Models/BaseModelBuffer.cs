@@ -77,7 +77,7 @@ namespace SharpQuake.Renderer.Models
         {
         }
 
-        public virtual void BeginTexture( BaseTexture texture, BaseTexture lightmapTexture, Double time, bool noLightmap, bool waveDistort, Double waveScale )
+        public virtual void BeginTexture( BaseTexture texture, BaseTexture lightmapTexture, Double time, bool noLightmap, bool waveDistort, Double waveScale, float opacity )
         {
         }
 
@@ -93,11 +93,17 @@ namespace SharpQuake.Renderer.Models
         }
     }
 
-    [StructLayout( LayoutKind.Sequential, Pack = 1 )]
+    [StructLayout( LayoutKind.Sequential, Pack = 4 )]
     public struct BufferVertex
     {
-        public Vector3 Position;
-        public Vector2 UV;
-        public Vector2 UV2;
+        public float X;
+        public float Y;
+        public float Z;
+
+        public float U;
+        public float V;
+
+        public float U2;
+        public float V2;
     }
 }

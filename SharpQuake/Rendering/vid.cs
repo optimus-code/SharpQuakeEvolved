@@ -129,19 +129,19 @@ namespace SharpQuake
             _videoState = videoState;
         }
 
-        private void InitialiseClientVariables()
+        public void InitialiseClientVariables()
 		{
             if ( Cvars.glZTrick == null )
             {
                 Cvars.glZTrick = _cvars.Add( "gl_ztrick", true );
-                Cvars.Mode = _cvars.Add( "vid_mode", 0 );
+                Cvars.Mode = _cvars.Add( "vid_mode", -1, ClientVariableFlags.Archive );
                 Cvars.DefaultMode = _cvars.Add( "_vid_default_mode", 0, ClientVariableFlags.Archive );
                 Cvars.DefaultModeWin = _cvars.Add( "_vid_default_mode_win", 3, ClientVariableFlags.Archive );
                 Cvars.Wait = _cvars.Add( "vid_wait", false );
                 Cvars.NoPageFlip = _cvars.Add( "vid_nopageflip", 0, ClientVariableFlags.Archive );
                 Cvars.WaitOverride = _cvars.Add( "_vid_wait_override", 0, ClientVariableFlags.Archive );
-                Cvars.ConfigX = _cvars.Add( "vid_config_x", 800, ClientVariableFlags.Archive );
-                Cvars.ConfigY = _cvars.Add( "vid_config_y", 600, ClientVariableFlags.Archive );
+                Cvars.ConfigX = _cvars.Add( "vid_config_x", 1280, ClientVariableFlags.Archive );
+                Cvars.ConfigY = _cvars.Add( "vid_config_y", 720, ClientVariableFlags.Archive );
                 Cvars.StretchBy2 = _cvars.Add( "vid_stretch_by_2", 1, ClientVariableFlags.Archive );
                 Cvars.WindowedMouse = _cvars.Add( "_windowed_mouse", true, ClientVariableFlags.Archive );
             }
@@ -164,7 +164,6 @@ namespace SharpQuake
         /// <param name="palette"></param>
         public void Initialise( Byte[] palette )
         {
-            InitialiseClientVariables();
             InitialiseCommands();
 
             Device.Initialise( palette );
@@ -179,7 +178,12 @@ namespace SharpQuake
 
             _cdAudio.Pause( );
 
-            Device.SetMode( Device.ChosenMode, palette );
+            var requestedMode = Cvars.Mode.Get<Int32>( );
+
+            if ( requestedMode < 0 || requestedMode >= Device.AvailableModes.Length )
+                requestedMode = Device.ChosenMode;
+
+            Device.SetMode( requestedMode, palette );
 
             var vid = _videoState.Data;
 

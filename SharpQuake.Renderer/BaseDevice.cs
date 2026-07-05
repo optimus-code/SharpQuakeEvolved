@@ -302,33 +302,19 @@ namespace SharpQuake.Renderer
 
             var mode = AvailableModes[index];
 
-            if ( Mode == mode )
+            if ( Mode == mode && ChosenMode == index )
                 return;
-
-            // Disable screen for loading was here            
 
             ChangeMode( mode );
 
-            // Adjust conheight was here
+            ChosenMode = index;
+            Mode = mode;
 
-            // Set aspect ratio
             Desc.AspectRatio = Desc.ActualWidth / ( Double ) Desc.ActualHeight;
-            Desc.Width = ( Int32 ) ( RendererDef.VIRTUAL_HEIGHT * Desc.AspectRatio );
-            Desc.Height = ( Int32 ) RendererDef.VIRTUAL_HEIGHT;
-
-            // Set num pages
-
-            // Resume screen and audio
-
-            // Apply cvar
-
-            // Clear all states
-
-            //ConsoleWrapper.SafePrint( "Video mode {0} initialized.\n", GetModeDescription( _ModeNum ) );
+            Desc.Width = Desc.ActualWidth;// ( Int32 ) ( RendererDef.VIRTUAL_HEIGHT * Desc.AspectRatio );
+            Desc.Height = Desc.ActualHeight;// ( Int32 ) RendererDef.VIRTUAL_HEIGHT;
 
             Palette.Initialise( palette );
-
-            // vid.recalc_refdef = true;
         }
 
         /// <summary>

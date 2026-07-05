@@ -73,10 +73,25 @@ namespace SharpQuake.Rendering.Environment
 			ViewLeaf = _clientState.Data.worldmodel.PointInLeaf( ref origin );
 		}
 
-		/// <summary>
-		/// R_MarkLeaves
-		/// </summary>
-		public void MarkLeaves( )
+        private void MarkLeafAndParents( MemoryLeaf leaf )
+        {
+            MemoryNodeBase node = leaf;
+
+            do
+            {
+                if ( node.visframe == VisFrameCount )
+                    break;
+
+                node.visframe = VisFrameCount;
+                node = node.parent;
+            }
+            while ( node != null );
+        }
+
+        /// <summary>
+        /// R_MarkLeaves
+        /// </summary>
+        public void MarkLeaves( )
 		{
 			if ( OldViewLeaf == ViewLeaf && !Cvars.NoVis.Get<Boolean>() )
 				return;
@@ -98,21 +113,14 @@ namespace SharpQuake.Rendering.Environment
 				vis = _clientState.Data.worldmodel.LeafPVS( ViewLeaf );
 
 			var world = _clientState.Data.worldmodel;
-			for ( var i = 0; i < world.NumLeafs; i++ )
-			{
-				if ( vis[i >> 3] != 0 & ( 1 << ( i & 7 ) ) != 0 )
-				{
-					MemoryNodeBase node = world.Leaves[i + 1];
-					do
-					{
-						if ( node.visframe == VisFrameCount )
-							break;
-						node.visframe = VisFrameCount;
-						node = node.parent;
-					} while ( node != null );
-				}
-			}
-		}
+            for ( var i = 0; i < world.NumLeafs; i++ )
+            {
+                if ( vis[i >> 3] != 0 & ( 1 << ( i & 7 ) ) == 0 )
+                    continue;
+
+                MarkLeafAndParents( world.Leaves[i + 1] );
+            }
+        }
 
 		/// <summary>
 		/// R_RecursiveWorldNode

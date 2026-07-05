@@ -408,6 +408,100 @@ namespace SharpQuake.Desktop
             dest.Write( buf, 0, buf.Length );
         }
 
+        private static bool TryReadBindingLine( string line, out string keyName, out string binding )
+        {
+            keyName = null;
+            binding = null;
+
+            const string command = "bind";
+
+            if ( !line.StartsWith( command, StringComparison.OrdinalIgnoreCase ) )
+                return false;
+
+            var index = command.Length;
+
+            if ( index >= line.Length || !Char.IsWhiteSpace( line[index] ) )
+                return false;
+
+            index = SkipWhiteSpace( line, index );
+
+            if ( !TryReadQuotedString( line, ref index, out keyName ) )
+                return false;
+
+            index = SkipWhiteSpace( line, index );
+
+            if ( !TryReadQuotedString( line, ref index, out binding ) )
+                return false;
+
+            return !String.IsNullOrEmpty( keyName );
+        }
+
+        private static int SkipWhiteSpace( string text, int index )
+        {
+            while ( index < text.Length && Char.IsWhiteSpace( text[index] ) )
+                index++;
+
+            return index;
+        }
+
+        private static bool TryReadQuotedString( string text, ref int index, out string value )
+        {
+            value = null;
+
+            if ( index >= text.Length || text[index] != '"' )
+                return false;
+
+            index++;
+
+            var start = index;
+
+            while ( index < text.Length && text[index] != '"' )
+                index++;
+
+            if ( index >= text.Length )
+                return false;
+
+            value = text.Substring( start, index - start );
+
+            index++;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Key_ReadBindings
+        /// Reads lines containing: bind "key" "binding"
+        /// </summary>
+        public void ReadBindings( Stream src )
+        {
+            using var reader = new StreamReader(
+                src,
+                Encoding.ASCII,
+                detectEncodingFromByteOrderMarks: false,
+                bufferSize: 4096,
+                leaveOpen: true );
+
+            string line;
+
+            while ( ( line = reader.ReadLine( ) ) != null )
+            {
+                line = line.Trim( );
+
+                if ( line.Length == 0 )
+                    continue;
+
+                if ( line.StartsWith( "//" ) || line.StartsWith( "#" ) )
+                    continue;
+
+                if ( !TryReadBindingLine( line, out var keyName, out var binding ) )
+                    continue;
+
+                var keynum = StringToKeynum( keyName );
+
+                SetBinding( keynum, binding );
+            }
+        }
+
         /// <summary>
         /// Key_SetBinding
         /// </summary>

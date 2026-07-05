@@ -32,8 +32,8 @@ namespace SharpQuake.Renderer
     {
         //public const Single VIRTUAL_WIDTH = 640;
         //public const Single VIRTUAL_HEIGHT = 480;
-        public const Single VIRTUAL_WIDTH = 2560;
-        public const Single VIRTUAL_HEIGHT = 1080;
+        public const Single VIRTUAL_WIDTH = 1600;
+        public const Single VIRTUAL_HEIGHT = 900;
     }
 
 
